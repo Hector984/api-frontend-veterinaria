@@ -7,11 +7,17 @@ const router = createRouter({
         {
             path: '/',
             component: AppLayout,
+            meta: { requiresAuth: true },
             children: [
                 {
                     path: '/',
                     name: 'dashboard',
                     component: () => import('@/views/Dashboard.vue')
+                },
+                {
+                    path: '/veterinarias',
+                    name: 'veterinarias',
+                    component: () => import('@/views/Veterinarias.vue')
                 },
                 {
                     path: '/uikit/formlayout',
@@ -133,6 +139,20 @@ const router = createRouter({
             component: () => import('@/views/pages/auth/Error.vue')
         }
     ]
+});
+
+router.beforeEach((to, from, next) => {
+    // Verificar la existencia del token
+
+    const token = localStorage.getItem('token');
+
+    if (to.meta.requiresAuth && !token) {
+        next({ name: 'login' }); // redirige al login
+    } else if (to.name === 'login' && token) {
+        next({ name: 'dashboard' });
+    } else {
+        next();
+    }
 });
 
 export default router;

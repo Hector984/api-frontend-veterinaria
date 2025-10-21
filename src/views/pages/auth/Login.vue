@@ -1,10 +1,36 @@
 <script setup>
+import api from '@/api/axios.js';
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
-import { ref } from 'vue';
+import { ref, router } from 'vue';
 
 const email = ref('');
 const password = ref('');
 const checked = ref(false);
+
+const login = async () => {
+    try {
+        const response = await api.post('usuarios/iniciar-sesion', {
+            email: email.value,
+            password: password.value
+        });
+
+        localStorage.setItem(
+            'token',
+            JSON.stringify({
+                expiracion: response.data.expiracion,
+                token: response.data.token
+            })
+        );
+
+        router.push({ name: 'dashboard' });
+    } catch (error) {
+        if (error.response) {
+            console.error('Error en el servidor:', error.response.status, error.response.data);
+        } else {
+            console.error('Error en la petición:', error.message);
+        }
+    }
+};
 </script>
 
 <template>
@@ -49,7 +75,7 @@ const checked = ref(false);
                             </div>
                             <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
                         </div>
-                        <Button label="Sign In" class="w-full" as="router-link" to="/"></Button>
+                        <Button @click="login" label="Sign In" class="w-full" as="router-link" to="/"></Button>
                     </div>
                 </div>
             </div>
