@@ -14,7 +14,7 @@ defineProps({
 </script>
 
 <template>
-    <div v-if="visible" class="spinner-overlay">
+    <div class="spinner-overlay">
         <div class="spinner-content">
             <ProgressSpinner style="width: 60px; height: 60px" strokeWidth="4" fill="transparent" animationDuration="1s" />
             <p v-if="message" class="mt-3 text-white font-semibold">{{ message }}</p>

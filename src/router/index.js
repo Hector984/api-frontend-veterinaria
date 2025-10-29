@@ -20,6 +20,11 @@ const router = createRouter({
                     component: () => import('@/views/Veterinarias.vue')
                 },
                 {
+                    path: '/panel-veterinaria',
+                    name: 'panel-vet',
+                    component: () => import('@/views/Panel.vue')
+                },
+                {
                     path: '/uikit/formlayout',
                     name: 'formlayout',
                     component: () => import('@/views/uikit/FormLayout.vue')
