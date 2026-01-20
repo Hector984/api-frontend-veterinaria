@@ -1,8 +1,20 @@
 <script setup>
 import api from '@/api/axios.js';
+import { useLoadingStore } from '@/stores/useLoadingStore';
+import { storeToRefs } from 'pinia';
 import { useToast } from 'primevue/usetoast';
-import { onMounted, reactive, ref, watch } from 'vue';
-import SpinnerUI from '../ui/SpinnerUI.vue';
+import { reactive, ref } from 'vue';
+
+const store = useLoadingStore();
+const { loading } = storeToRefs(store);
+const { setLoading } = store;
+
+const props = defineProps({
+    showRegisterVeterinaryForm: {
+        type: Boolean,
+        required: true
+    }
+});
 
 const formData = reactive({
     nombre: '',
@@ -11,17 +23,8 @@ const formData = reactive({
     direccion: ''
 });
 
-const loading = ref(true);
 const toast = useToast();
 const message = ref([]);
-const veterinaryInfo = reactive({
-    nombre: '',
-    direccion: '',
-    email: '',
-    telefono: '',
-    activo: false
-});
-const registerVeterinaryForm = ref(true);
 
 const clearFormValues = () => {
     formData.nombre = '';
@@ -32,7 +35,7 @@ const clearFormValues = () => {
 
 const onSubmit = async () => {
     try {
-        loading.value = true;
+        setLoading(true);
 
         await api
             .post('veterinarias', formData)
@@ -46,7 +49,7 @@ const onSubmit = async () => {
                 toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo registrar la veterinaria.', life: 3000 });
             })
             .finally(() => {
-                loading.value = false;
+                setLoading(false);
             });
     } catch (error) {
         if (error.response) {
@@ -56,38 +59,6 @@ const onSubmit = async () => {
         }
     }
 };
-
-const getMyVeterinary = async () => {
-    try {
-        await api
-            .get('veterinarias/mi-veterinaria')
-            .then((res) => {
-                Object.assign(veterinaryInfo, res.data);
-                console.log(res.data);
-            })
-            .catch((err) => {
-                console.log(err);
-            })
-            .finally(() => {
-                loading.value = false;
-            });
-    } catch (error) {
-        console.log(error);
-    }
-};
-
-watch(
-    () => veterinaryInfo,
-    (newVal) => {
-        if (newVal.nombre != '') {
-            registerVeterinaryForm.value = false;
-        }
-    }
-);
-
-onMounted(() => {
-    getMyVeterinary();
-});
 </script>
 
 <template>
@@ -96,25 +67,7 @@ onMounted(() => {
             <Message v-for="msg of message" :severity="msg.severity" :key="msg.content">{{ msg.content }}</Message>
         </transition-group>
     </div>
-    <SpinnerUI v-if="loading" :message="'Cargando...'" />
-    <div class="col-span-12 lg:col-span-6 xl:col-span-3">
-        <div class="card mb-0">
-            <div class="flex justify-between mb-4">
-                <div>
-                    <div class="text-surface-900 dark:text-surface-0 font-medium text-xl mb-4">Veterinaria: {{ veterinaryInfo.nombre }}</div>
-                    <span class="block text-muted-color font-medium mb-4">Email: {{ veterinaryInfo.email }}</span>
-                    <span class="block text-muted-color font-medium mb-4">Dirección: {{ veterinaryInfo.direccion }}</span>
-                    <span class="block text-muted-color font-medium mb-4">Teléfono: {{ veterinaryInfo.telefono }}</span>
-                </div>
-                <div class="flex items-center justify-center" style="width: 2.5rem; height: 2.5rem">
-                    <Tag icon="pi pi-check" severity="success" :value="veterinaryInfo.activo"></Tag>
-                </div>
-            </div>
-            <span class="text-primary font-medium">24 new </span>
-            <span class="text-muted-color">since last visit</span>
-        </div>
-    </div>
-    <form v-if="!loading && !registerVeterinaryForm" class="col-span-12 xl:col-span-6" @submit.prevent="onSubmit">
+    <form v-if="!loading && !props.showRegisterVeterinaryForm" class="col-span-12 xl:col-span-6" @submit.prevent="onSubmit">
         <div class="flex mt-8">
             <div class="card flex flex-col gap-4 w-full">
                 <div class="font-semibold text-xl">Llena los datos para registrar la veterinaria</div>

@@ -3,6 +3,7 @@ import api from '@/api/axios.js';
 import VeterinariaForm from '@/components/panel/VeterinariaForm.vue';
 import CardInfo from '@/components/ui/CardInfo.vue';
 import { useLoadingStore } from '@/stores/useLoadingStore';
+import TablaMascotas from '@/views/mi-veterinaria/TablaMascotas.vue';
 import { onMounted, reactive, ref, watch } from 'vue';
 
 const store = useLoadingStore();
@@ -60,6 +61,7 @@ onMounted(() => {
                 <CardInfo :information="veterinaryInfo" />
             </div>
             <VeterinariaForm :showRegisterVeterinaryForm="showRegisterVeterinaryForm" />
+            <TablaMascotas :mascotas="veterinaryInfo.mascotas" :loading="loading" />
         </div>
     </Fluid>
 </template>

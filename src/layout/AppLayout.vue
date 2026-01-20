@@ -4,7 +4,13 @@ import { computed, ref, watch } from 'vue';
 import AppFooter from './AppFooter.vue';
 import AppSidebar from './AppSidebar.vue';
 import AppTopbar from './AppTopbar.vue';
+import SpinnerUI from '@/components/ui/SpinnerUI.vue';
+import { useLoadingStore } from '@/stores/useLoadingStore';
+import { storeToRefs } from 'pinia';
 
+const store = useLoadingStore();
+
+const { loading } = storeToRefs(store);
 const { layoutConfig, layoutState, isSidebarActive } = useLayout();
 
 const outsideClickListener = ref(null);
@@ -61,6 +67,7 @@ function isOutsideClicked(event) {
         <app-sidebar></app-sidebar>
         <div class="layout-main-container">
             <div class="layout-main">
+                <SpinnerUI v-if="loading" :message="'Cargando...'" />
                 <router-view></router-view>
             </div>
             <app-footer></app-footer>
