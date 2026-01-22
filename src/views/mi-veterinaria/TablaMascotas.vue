@@ -27,7 +27,7 @@ function initfilters() {
         nombre: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
         especie: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
         sexo: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-        nombreCliente: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        duenio: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
         telefono: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
         activo: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] }
     };
@@ -36,7 +36,7 @@ function initfilters() {
 
 <template>
     <div class="card">
-        <div class="font-semibold text-xl mb-4">Filtros</div>
+        <div class="font-semibold text-xl mb-4">Pacientes</div>
         <DataTable
             :value="props.mascotas"
             :paginator="true"
@@ -47,7 +47,7 @@ function initfilters() {
             filterDisplay="menu"
             :loading="props.loading"
             :filters="filtros"
-            :globalFilterFields="['nombre', 'especie', 'sexo', 'nombreCliente', 'telefono', 'activo']"
+            :globalFilterFields="['nombre', 'especie', 'sexo', 'duenio', 'telefono', 'activo']"
             showGridlines
         >
             <template #header>
@@ -75,41 +75,13 @@ function initfilters() {
             <!-- Columna 2 -->
             <Column header="Especie" filterField="especie" style="min-width: 12rem">
                 <template #body="{ data }">
-                    <div class="flex items-center gap-2">
-                        <!-- <img alt="flag" src="https://primefaces.org/cdn/primevue/images/flag/flag_placeholder.png" :class="`flag flag-${data.country.code}`" style="width: 24px" /> -->
-                        <span>{{ data.especie }}</span>
-                    </div>
+                    {{ data.especie }}
                 </template>
                 <template #filter="{ filterModel }">
-                    <InputText v-model="filterModel.value" type="text" placeholder="Buscar por email" />
-                </template>
-                <template #filterclear="{ filterCallback }">
-                    <Button type="button" icon="pi pi-times" @click="filterCallback()" severity="secondary"></Button>
-                </template>
-                <template #filterapply="{ filterCallback }">
-                    <Button type="button" icon="pi pi-check" @click="filterCallback()" severity="success"></Button>
+                    <InputText v-model="filterModel.value" type="text" placeholder="Buscar por especie" />
                 </template>
             </Column>
             <!-- Columna 3 -->
-            <!-- <Column header="Agent" filterField="representative" :showFilterMatchModes="false" :filterMenuStyle="{ width: '14rem' }" style="min-width: 14rem">
-                <template #body="{ data }">
-                    <div class="flex items-center gap-2">
-                        <img :alt="data.representative.name" :src="`https://primefaces.org/cdn/primevue/images/avatar/${data.representative.image}`" style="width: 32px" />
-                        <span>{{ data.representative.name }}</span>
-                    </div>
-                </template>
-                <template #filter="{ filterModel }">
-                    <MultiSelect v-model="filterModel.value" :options="representatives" optionLabel="name" placeholder="Any">
-                        <template #option="slotProps">
-                            <div class="flex items-center gap-2">
-                                <img :alt="slotProps.option.name" :src="`https://primefaces.org/cdn/primevue/images/avatar/${slotProps.option.image}`" style="width: 32px" />
-                                <span>{{ slotProps.option.name }}</span>
-                            </div>
-                        </template>
-                    </MultiSelect>
-                </template>
-            </Column> -->
-            <!-- Columna 4 -->
             <Column header="Sexo" filterField="sexo" style="min-width: 10rem">
                 <template #body="{ data }">
                     <div class="flex items-center gap-2">
@@ -117,32 +89,32 @@ function initfilters() {
                     </div>
                 </template>
                 <template #filter="{ filterModel }">
-                    <DatePicker v-model="filterModel.value" placeholder="mm/dd/yyyy" />
+                    <InputText v-model="filterModel.value" type="text" placeholder="Buscar por sexo" />
                 </template>
             </Column>
-            <!-- Columna 5 -->
-            <Column header="Dueño" filterField="nombreCliente" style="min-width: 10rem">
+            <!-- Columna 4 -->
+            <Column header="Dueño" filterField="duenio" style="min-width: 10rem">
                 <template #body="{ data }">
                     <div class="flex items-center gap-2">
                         <span>{{ data.nombreCliente }}</span>
                     </div>
                 </template>
                 <template #filter="{ filterModel }">
-                    <InputNumber v-model="filterModel.value" mode="currency" currency="USD" locale="en-US" />
+                    <InputText v-model="filterModel.value" type="text" placeholder="Buscar por dueño" />
                 </template>
             </Column>
-            <!-- Columna 6 -->
+            <!-- Columna 5 -->
             <Column header="Teléfono" filterField="telefono" style="min-width: 10rem">
                 <template #body="{ data }">
                     <div class="flex items-center gap-2">
-                        <span>{{ data.telefono }}</span>
+                        <span>{{ data.telefonoCliente }}</span>
                     </div>
                 </template>
                 <template #filter="{ filterModel }">
-                    <InputNumber v-model="filterModel.value" mode="currency" currency="USD" locale="en-US" />
+                    <InputText v-model="filterModel.value" type="text" placeholder="Buscar por telefono" />
                 </template>
             </Column>
-            <!-- Columna 8 -->
+            <!-- Columna 6 -->
             <Column field="activo" header="Status" dataType="boolean" bodyClass="text-center" style="min-width: 8rem">
                 <template #body="{ data }">
                     <i class="pi" :class="{ 'pi-check-circle text-green-500 ': data.activo, 'pi-times-circle text-red-500': !data.activo }"></i>

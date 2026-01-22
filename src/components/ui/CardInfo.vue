@@ -1,6 +1,4 @@
 <script setup>
-import Button from 'primevue/button';
-
 const props = defineProps({
     information: Object
 });
@@ -27,9 +25,7 @@ const props = defineProps({
                 </div>
             </div>
             <div class="mt-6 lg:mt-0 flex items-center gap-4">
-                <Button icon="pi pi-bookmark" rounded severity="secondary" />
-                <Button icon="pi pi-heart" rounded severity="secondary" />
-                <Button icon="pi pi-list" rounded severity="secondary" />
+                <slot></slot>
             </div>
         </div>
     </div>
