@@ -4,7 +4,7 @@ import { useLoadingStore } from '@/stores/useLoadingStore';
 import { useVeterinaryStore } from '@/stores/useVeterinaryStore';
 import { storeToRefs } from 'pinia';
 import { useToast } from 'primevue';
-import { onMounted, reactive, ref, watch } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 
 const visible = defineModel('visible', { type: Boolean });
 
@@ -12,12 +12,12 @@ const store = useLoadingStore();
 const { setLoading } = store;
 const storeVeterinaria = useVeterinaryStore();
 const { obtenerIdVeterinaria } = storeToRefs(storeVeterinaria);
+const { actualizarMascotas } = storeVeterinaria;
 
 const toast = useToast();
-const message = ref([]);
 
 const clientes = ref([]);
-const dropdownItem = ref(null);
+const duenioMascota = ref(null);
 
 const datosFormulario = reactive({
     nombre: '',
@@ -25,10 +25,10 @@ const datosFormulario = reactive({
     sexo: '',
     edad: 0,
     peso: 0,
-    fechaNacimiento: new Date(),
+    fechaNacimiento: null,
     observaciones: '',
     clienteId: null,
-    activo: true
+    veterinariaId: obtenerIdVeterinaria.value
 });
 
 const limpiarFormulario = () => {
@@ -45,23 +45,32 @@ const limpiarFormulario = () => {
 
 const onSubmit = async () => {
     try {
+        // Validar todos los campos del formulario
+        datosFormulario.clienteId = duenioMascota.value ? duenioMascota.value.id : null;
+
+        if (!datosFormulario.clienteId) {
+            toast.add({ severity: 'error', summary: 'Error', detail: 'Debe seleccionar un dueño para la mascota.', life: 3000 });
+            return;
+        }
+
         setLoading(true);
 
         await api
-            .post('veterinarias', datosFormulario)
+            .post('mascotas', datosFormulario)
             .then((res) => {
-                console.log(res.data);
-                toast.add({ severity: 'success', summary: 'Exito', detail: 'Veterinaria registrada.', life: 3000 });
+                actualizarMascotas(res.data);
+                toast.add({ severity: 'success', summary: 'Exito', detail: 'Mascota registrada.', life: 3000 });
                 limpiarFormulario();
             })
             .catch((err) => {
-                console.log(err);
-                toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo registrar la veterinaria.', life: 3000 });
+                // err.status == 500
+                toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo registrar la mascota.', life: 3000 });
             })
             .finally(() => {
                 setLoading(false);
             });
     } catch (error) {
+        setLoading(false);
         if (error.response) {
             console.error('Error en el servidor:', error);
         } else {
@@ -96,10 +105,8 @@ function cerrarVentana() {
     visible.value = false;
 }
 
-watch(visible, (newValue) => {
-    if (newValue) {
-        obtenerClientesPorVeterinariaId();
-    }
+onMounted(() => {
+    obtenerClientesPorVeterinariaId();
 });
 </script>
 <template>
@@ -135,7 +142,7 @@ watch(visible, (newValue) => {
                         </div>
                         <div class="flex flex-wrap gap-2 w-full">
                             <label for="state">Dueño</label>
-                            <Select id="state" v-model="dropdownItem" :options="clientes" optionLabel="name" placeholder="Selecciona al dueño" class="w-full"></Select>
+                            <Select id="state" v-model="duenioMascota" :options="clientes" optionLabel="nombre" placeholder="Selecciona al dueño" class="w-full"></Select>
                         </div>
                     </div>
 

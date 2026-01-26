@@ -13,7 +13,8 @@ const store = useLoadingStore();
 const { setLoading } = store;
 const { loading } = storeToRefs(store);
 const storeVeterinaria = useVeterinaryStore();
-const { setIdVeterinaria } = storeVeterinaria;
+const { obtenerMascotas } = storeToRefs(storeVeterinaria);
+const { setIdVeterinaria, actualizarMascotas } = storeVeterinaria;
 
 const showRegisterVeterinaryForm = ref(true);
 const showRegisterPetForm = ref(false);
@@ -35,6 +36,7 @@ const getMyVeterinary = async () => {
             .then((res) => {
                 Object.assign(veterinaryInfo, res.data);
                 setIdVeterinaria(res.data.id);
+                actualizarMascotas(veterinaryInfo.mascotas);
                 console.log(res.data);
             })
             .catch((err) => {
@@ -78,7 +80,7 @@ onMounted(() => {
             </div>
             <VeterinariaForm :showRegisterVeterinaryForm="showRegisterVeterinaryForm" />
         </div>
-        <FormularioRegistrarMascota v-model:visible="showRegisterPetForm" />
-        <TablaMascotas :mascotas="veterinaryInfo.mascotas" :loading="loading" />
+        <FormularioRegistrarMascota v-if="showRegisterPetForm" v-model:visible="showRegisterPetForm" />
+        <TablaMascotas :mascotas="obtenerMascotas" :loading="loading" />
     </Fluid>
 </template>
