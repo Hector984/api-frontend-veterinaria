@@ -117,11 +117,21 @@ function initfilters() {
             <!-- Columna 6 -->
             <Column field="activo" header="Status" dataType="boolean" bodyClass="text-center" style="min-width: 8rem">
                 <template #body="{ data }">
-                    <i class="pi" :class="{ 'pi-check-circle text-green-500 ': data.activo, 'pi-times-circle text-red-500': !data.activo }"></i>
+                    <span class="p-2 rounded text-white" :class="{ 'bg-green-500': data.activo, 'bg-red-500': !data.activo }">
+                        <i class="pi text-white" :class="{ 'pi-check-circle': data.activo, 'pi-times-circle': !data.activo }"></i>
+                        {{ data.activo ? 'Activo' : 'Inactivo' }}
+                    </span>
                 </template>
                 <template #filter="{ filterModel }">
                     <label for="verified-filter" class="font-bold"> Verified </label>
                     <Checkbox v-model="filterModel.value" :indeterminate="filterModel.value === null" binary inputId="verified-filter" />
+                </template>
+            </Column>
+            <!-- Columna 7 -->
+            <Column header="Acciones" bodyClass="text-center" style="min-width: 8rem">
+                <template #body="slotProps">
+                    <Button icon="pi pi-pencil" severity="secondary" rounded @click="$emit('editarMascota', slotProps.data)" />
+                    <Button icon="pi pi-trash" severity="danger" rounded @click="confirmarEliminar(slotProps.data)" />
                 </template>
             </Column>
         </DataTable>

@@ -4,9 +4,16 @@ import { useLoadingStore } from '@/stores/useLoadingStore';
 import { useVeterinaryStore } from '@/stores/useVeterinaryStore';
 import { storeToRefs } from 'pinia';
 import { useToast } from 'primevue';
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 
 const visible = defineModel('visible', { type: Boolean });
+
+const props = defineProps({
+    mascota: {
+        type: Object,
+        default: null
+    }
+});
 
 const store = useLoadingStore();
 const { setLoading } = store;
@@ -14,10 +21,15 @@ const storeVeterinaria = useVeterinaryStore();
 const { obtenerIdVeterinaria } = storeToRefs(storeVeterinaria);
 const { actualizarMascotas } = storeVeterinaria;
 
+const modoEdicion = computed(() => !!props.mascota);
+const tituloFormulario = computed(() => (modoEdicion.value ? 'Editar información de la mascota' : 'Registrar datos de la mascota'));
+const headerFormulario = computed(() => (modoEdicion.value ? 'Editar mascota' : 'Registrar mascota'));
+
 const toast = useToast();
 
 const clientes = ref([]);
-const duenioMascota = ref(null);
+
+const formularioValido = ref(false);
 
 const datosFormulario = reactive({
     nombre: '',
@@ -30,6 +42,40 @@ const datosFormulario = reactive({
     clienteId: null,
     veterinariaId: obtenerIdVeterinaria.value
 });
+
+const erroresFormulario = reactive({
+    nombre: '',
+    especie: '',
+    sexo: '',
+    edad: '',
+    peso: '',
+    fechaNacimiento: '',
+    observaciones: '',
+    clienteId: ''
+});
+
+const validarFormulario = (event) => {
+    if (typeof datosFormulario[event.target.id] === 'string' && datosFormulario[event.target.id] === '') {
+        toast.add({ severity: 'error', summary: 'Error', detail: `El campo ${event.target.id} es obligatorio.`, life: 3000 });
+        erroresFormulario[event.target.id] = `El campo ${event.target.id} es obligatorio.`;
+        formularioValido.value = false;
+    } else if (typeof datosFormulario[event.target.id] === 'number' && datosFormulario[event.target.id] === 0) {
+        toast.add({ severity: 'error', summary: 'Error', detail: `El campo ${event.target.id} tiene que ser mayor a cero.`, life: 3000 });
+        erroresFormulario[event.target.id] = `El campo ${event.target.id} tiene que ser mayor a cero.`;
+        formularioValido.value = false;
+    } else {
+        erroresFormulario[event.target.id] = '';
+        formularioValido.value = true;
+    }
+};
+
+const mostrarErroresFormulario = () => {
+    Object.entries(datosFormulario).forEach(([campo, valor]) => {
+        if (valor === '' || valor === 0 || !valor) {
+            erroresFormulario[campo] = `El campo es obligatorio.`;
+        }
+    });
+};
 
 const limpiarFormulario = () => {
     datosFormulario.nombre = '';
@@ -45,11 +91,9 @@ const limpiarFormulario = () => {
 
 const onSubmit = async () => {
     try {
-        // Validar todos los campos del formulario
-        datosFormulario.clienteId = duenioMascota.value ? duenioMascota.value.id : null;
-
-        if (!datosFormulario.clienteId) {
-            toast.add({ severity: 'error', summary: 'Error', detail: 'Debe seleccionar un dueño para la mascota.', life: 3000 });
+        if (!formularioValido.value) {
+            mostrarErroresFormulario();
+            toast.add({ severity: 'error', summary: 'Error', detail: 'El formulario tiene errores.', life: 3000 });
             return;
         }
 
@@ -105,56 +149,74 @@ function cerrarVentana() {
     visible.value = false;
 }
 
+watch(
+    () => props.mascota,
+    (newVal) => {
+        if (newVal) {
+            Object.assign(datosFormulario, newVal);
+        } else {
+            limpiarFormulario();
+        }
+    },
+    { immediate: true }
+);
+
 onMounted(() => {
     obtenerClientesPorVeterinariaId();
 });
 </script>
 <template>
-    <Dialog header="Registrar mascota" v-model:visible="visible" :breakpoints="{ '960px': '75vw' }" :style="{ width: '30vw' }" :modal="true">
+    <Dialog :header="headerFormulario" v-model:visible="visible" :breakpoints="{ '960px': '75vw' }" :style="{ width: '30vw' }" :modal="true">
         <form class="col-span-12 xl:col-span-6" @submit.prevent="onSubmit">
             <div class="flex mt-8">
                 <div class="card flex flex-col gap-4 w-full">
-                    <div class="font-semibold text-xl">Llena los datos para registrar a una mascota</div>
+                    <div class="font-semibold text-xl">{{ tituloFormulario }}</div>
                     <div class="flex flex-col gap-4">
                         <div class="flex flex-wrap gap-2 w-full">
-                            <label for="firstname2">Nombre *</label>
-                            <InputText v-model="datosFormulario.nombre" id="firstname2" type="text" placeholder="Capitan" />
+                            <label for="nombre">Nombre *</label>
+                            <InputText v-model.trim="datosFormulario.nombre" id="nombre" type="text" placeholder="Capitan" @blur="validarFormulario" :class="{ 'p-invalid': erroresFormulario.nombre }" />
+                            <span class="text-red-400" v-if="erroresFormulario.nombre">{{ erroresFormulario.nombre }}</span>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full">
-                            <label for="lastname2">Especie *</label>
-                            <InputText v-model="datosFormulario.especie" id="lastname2" type="text" placeholder="Perro" />
+                            <label for="especie">Especie *</label>
+                            <InputText v-model.trim="datosFormulario.especie" id="especie" type="text" placeholder="Perro" @blur="validarFormulario" :class="{ 'p-invalid': erroresFormulario.especie }" />
+                            <span class="text-red-400" v-if="erroresFormulario.especie">{{ erroresFormulario.especie }}</span>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full">
-                            <label for="lastname2">Sexo *</label>
-                            <InputText v-model="datosFormulario.sexo" id="lastname2" type="text" placeholder="Macho" />
+                            <label for="sexo">Sexo *</label>
+                            <InputText v-model.trim="datosFormulario.sexo" id="sexo" type="text" placeholder="Macho" @blur="validarFormulario" :class="{ 'p-invalid': erroresFormulario.sexo }" />
+                            <span class="text-red-400" v-if="erroresFormulario.sexo">{{ erroresFormulario.sexo }}</span>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full">
-                            <label for="lastname2">Edad *</label>
-                            <InputText v-model="datosFormulario.edad" id="lastname2" type="number" />
+                            <label for="edad">Edad *</label>
+                            <InputText v-model="datosFormulario.edad" id="edad" type="number" @blur="validarFormulario" :class="{ 'p-invalid': erroresFormulario.edad }" />
+                            <span class="text-red-400" v-if="erroresFormulario.edad">{{ erroresFormulario.edad }}</span>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full">
-                            <label for="lastname2">Peso</label>
-                            <InputText v-model="datosFormulario.peso" id="lastname2" type="number" />
+                            <label for="peso">Peso</label>
+                            <InputText v-model="datosFormulario.peso" id="peso" type="number" />
                         </div>
                         <div class="flex flex-wrap gap-2 w-full">
-                            <label for="lastname2">Fecha de nacimiento</label>
-                            <InputText v-model="datosFormulario.fechaNacimiento" id="lastname2" type="date" />
+                            <label for="fechaNacimiento">Fecha de nacimiento *</label>
+                            <InputText v-model="datosFormulario.fechaNacimiento" id="fechaNacimiento" type="date" @blur="validarFormulario" :class="{ 'p-invalid': erroresFormulario.fechaNacimiento }" />
+                            <span class="text-red-400" v-if="erroresFormulario.fechaNacimiento">{{ erroresFormulario.fechaNacimiento }}</span>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full">
-                            <label for="state">Dueño</label>
-                            <Select id="state" v-model="duenioMascota" :options="clientes" optionLabel="nombre" placeholder="Selecciona al dueño" class="w-full"></Select>
+                            <label for="duenio">Dueño *</label>
+                            <Select id="duenio" v-model="datosFormulario.clienteId" :options="clientes" optionLabel="nombre" placeholder="Selecciona al dueño" class="w-full" :class="{ 'p-invalid': erroresFormulario.clienteId }" />
+                            <span class="text-red-400" v-if="erroresFormulario.clienteId">{{ erroresFormulario.clienteId }}</span>
                         </div>
                     </div>
 
                     <div class="flex flex-wrap">
-                        <label for="address">Observaciones</label>
-                        <Textarea v-model="datosFormulario.observaciones" id="address" rows="4" placeholder="Caracteristicas de la mascota..." />
+                        <label for="observaciones">Observaciones</label>
+                        <Textarea v-model.trim="datosFormulario.observaciones" id="observaciones" rows="4" placeholder="Caracteristicas de la mascota..." />
                     </div>
                 </div>
             </div>
         </form>
         <template #footer>
-            <Button type="submit" label="Registrar mascota" size="large" @click="onSubmit">Registrar</Button>
+            <Button type="submit" label="Registrar mascota" :disabled="!formularioValido" size="large" @click="onSubmit">Registrar</Button>
             <Button label="Cerrar" @click="cerrarVentana" />
         </template>
     </Dialog>

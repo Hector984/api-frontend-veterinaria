@@ -16,10 +16,10 @@ const storeVeterinaria = useVeterinaryStore();
 const { obtenerMascotas } = storeToRefs(storeVeterinaria);
 const { setIdVeterinaria, actualizarMascotas } = storeVeterinaria;
 
-const showRegisterVeterinaryForm = ref(true);
-const showRegisterPetForm = ref(false);
+const mostarFormularioRegistroVeterinaria = ref(true);
+const mostarFormularioRegistroMascota = ref(false);
 
-const veterinaryInfo = reactive({
+const datosVeterinaria = reactive({
     nombre: '',
     direccion: '',
     email: '',
@@ -27,16 +27,16 @@ const veterinaryInfo = reactive({
     activo: false
 });
 
-const getMyVeterinary = async () => {
+const obtenerDatosVeterinaria = async () => {
     try {
         setLoading(true);
 
         await api
             .get('veterinarias/mi-veterinaria')
             .then((res) => {
-                Object.assign(veterinaryInfo, res.data);
+                Object.assign(datosVeterinaria, res.data);
                 setIdVeterinaria(res.data.id);
-                actualizarMascotas(veterinaryInfo.mascotas);
+                actualizarMascotas(datosVeterinaria.mascotas);
                 console.log(res.data);
             })
             .catch((err) => {
@@ -51,20 +51,20 @@ const getMyVeterinary = async () => {
 };
 
 function open() {
-    showRegisterPetForm.value = true;
+    mostarFormularioRegistroMascota.value = true;
 }
 
 watch(
-    () => veterinaryInfo,
+    () => datosVeterinaria,
     (newVal) => {
         if (newVal.nombre != '') {
-            showRegisterVeterinaryForm.value = false;
+            mostarFormularioRegistroVeterinaria.value = false;
         }
     }
 );
 
 onMounted(() => {
-    getMyVeterinary();
+    obtenerDatosVeterinaria();
 });
 </script>
 
@@ -72,15 +72,15 @@ onMounted(() => {
     <Fluid>
         <div class="grid grid-cols-12 gap-8">
             <div class="col-span-12 lg:col-span-12 xl:col-span-12 mx-auto">
-                <CardInfo :information="veterinaryInfo">
+                <CardInfo :information="datosVeterinaria">
                     <Button icon="pi pi-plus" rounded severity="secondary" @click="open" />
                     <Button icon="pi pi-heart" rounded severity="secondary" />
                     <Button icon="pi pi-list" rounded severity="secondary" />
                 </CardInfo>
             </div>
-            <VeterinariaForm :showRegisterVeterinaryForm="showRegisterVeterinaryForm" />
+            <VeterinariaForm :showRegisterVeterinaryForm="mostarFormularioRegistroVeterinaria" />
         </div>
-        <FormularioRegistrarMascota v-if="showRegisterPetForm" v-model:visible="showRegisterPetForm" />
-        <TablaMascotas :mascotas="obtenerMascotas" :loading="loading" />
+        <FormularioRegistrarMascota v-if="mostarFormularioRegistroMascota" v-model:visible="mostarFormularioRegistroMascota" />
+        <TablaMascotas :mascotas="obtenerMascotas" :loading="loading" @editar-mascota="obtenerDatosMascota" />
     </Fluid>
 </template>
