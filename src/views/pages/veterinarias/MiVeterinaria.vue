@@ -4,9 +4,9 @@ import VeterinariaForm from '@/components/panel/VeterinariaForm.vue';
 import CardInfo from '@/components/ui/CardInfo.vue';
 import { useLoadingStore } from '@/stores/useLoadingStore';
 import { useVeterinaryStore } from '@/stores/useVeterinaryStore';
-import FormularioRegistrarMascota from '@/views/mi-veterinaria/FormularioRegistrarMascota.vue';
 import TablaMascotas from '@/views/mi-veterinaria/TablaMascotas.vue';
 import { storeToRefs } from 'pinia';
+import { Stepper } from 'primevue';
 import { onMounted, reactive, ref, watch } from 'vue';
 
 const store = useLoadingStore();
@@ -17,7 +17,7 @@ const { obtenerMascotas } = storeToRefs(storeVeterinaria);
 const { setIdVeterinaria, actualizarMascotas } = storeVeterinaria;
 
 const mostarFormularioRegistroVeterinaria = ref(true);
-const mostarFormularioRegistroMascota = ref(false);
+const mostarFormularioMascota = ref(false);
 
 const datosVeterinaria = reactive({
     nombre: '',
@@ -25,6 +25,19 @@ const datosVeterinaria = reactive({
     email: '',
     telefono: '',
     activo: false
+});
+
+const datosMascota = reactive({
+    id: null,
+    nombre: '',
+    especie: '',
+    sexo: '',
+    edad: 0,
+    peso: 0,
+    fechaNacimiento: null,
+    observaciones: '',
+    clienteId: null,
+    veterinariaId: null
 });
 
 const obtenerDatosVeterinaria = async () => {
@@ -35,9 +48,9 @@ const obtenerDatosVeterinaria = async () => {
             .get('veterinarias/mi-veterinaria')
             .then((res) => {
                 Object.assign(datosVeterinaria, res.data);
+                console.log(res.data);
                 setIdVeterinaria(res.data.id);
                 actualizarMascotas(datosVeterinaria.mascotas);
-                console.log(res.data);
             })
             .catch((err) => {
                 console.log(err);
@@ -50,9 +63,47 @@ const obtenerDatosVeterinaria = async () => {
     }
 };
 
-function open() {
-    mostarFormularioRegistroMascota.value = true;
+const obtenerDatosMascota = async (datos) => {
+    try {
+        setLoading(true);
+
+        await api
+            .get(`mascotas/${datos.id}`)
+            .then((res) => {
+                Object.assign(datosMascota, res.data);
+                abrirFormularioMascota();
+            })
+            .catch((err) => {
+                console.log(err);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+function abrirFormularioMascota() {
+    mostarFormularioMascota.value = true;
 }
+
+const limpiarFormulario = () => {
+    datosMascota.nombre = '';
+    datosMascota.especie = '';
+    datosMascota.sexo = '';
+    datosMascota.edad = 0;
+    datosMascota.peso = 0;
+    datosMascota.fechaNacimiento = null;
+    datosMascota.observaciones = '';
+    datosMascota.clienteId = null;
+};
+
+const cerrarFormulario = async () => {
+    limpiarFormulario();
+    mostarFormularioMascota.value = false;
+    await obtenerDatosVeterinaria();
+};
 
 watch(
     () => datosVeterinaria,
@@ -73,14 +124,24 @@ onMounted(() => {
         <div class="grid grid-cols-12 gap-8">
             <div class="col-span-12 lg:col-span-12 xl:col-span-12 mx-auto">
                 <CardInfo :information="datosVeterinaria">
-                    <Button icon="pi pi-plus" rounded severity="secondary" @click="open" />
+                    <Button icon="pi pi-plus" rounded severity="secondary" @click="abrirFormularioMascota" />
                     <Button icon="pi pi-heart" rounded severity="secondary" />
                     <Button icon="pi pi-list" rounded severity="secondary" />
                 </CardInfo>
             </div>
             <VeterinariaForm :showRegisterVeterinaryForm="mostarFormularioRegistroVeterinaria" />
         </div>
-        <FormularioRegistrarMascota v-if="mostarFormularioRegistroMascota" v-model:visible="mostarFormularioRegistroMascota" />
+        <Stepper value="1">
+            <StepList>
+                <Step value="1">Dueño</Step>
+                <Step value="2">Mascota</Step>
+            </StepList>
+            <StepPanels>
+                <StepPanel value="1"> </StepPanel>
+                <StepPanel value="2"> </StepPanel>
+            </StepPanels>
+        </Stepper>
+        <!-- <FormularioMascota v-if="mostarFormularioMascota" :mascota="datosMascota" v-model:visible="mostarFormularioMascota" @cerrar-formulario="cerrarFormulario" /> -->
         <TablaMascotas :mascotas="obtenerMascotas" :loading="loading" @editar-mascota="obtenerDatosMascota" />
     </Fluid>
 </template>

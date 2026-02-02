@@ -1,5 +1,5 @@
 <script setup>
-import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
+import { FilterMatchMode } from '@primevue/core/api';
 import { onBeforeMount, ref } from 'vue';
 
 const props = defineProps({
@@ -16,126 +16,100 @@ const props = defineProps({
 });
 
 const filtros = ref(null);
+const statuses = ref([
+    { label: 'Activa', value: true },
+    { label: 'Inactiva', value: false }
+]);
+
+const initFilters = () => {
+    filtros.value = {
+        nombre: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        especie: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        sexo: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        nombreCliente: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        telefonoCliente: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        activo: { value: null, matchMode: FilterMatchMode.EQUALS }
+    };
+};
+
+const clearFilter = () => {
+    initFilters();
+};
 
 onBeforeMount(() => {
-    initfilters();
+    initFilters();
 });
-
-function initfilters() {
-    filtros.value = {
-        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        nombre: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-        especie: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-        sexo: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-        duenio: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-        telefono: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-        activo: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] }
-    };
-}
 </script>
 
 <template>
-    <div class="card">
-        <div class="font-semibold text-xl mb-4">Pacientes</div>
-        <DataTable
-            :value="props.mascotas"
-            :paginator="true"
-            :rows="10"
-            dataKey="id"
-            :rowHover="true"
-            v-model:filters="filtros"
-            filterDisplay="menu"
-            :loading="props.loading"
-            :filters="filtros"
-            :globalFilterFields="['nombre', 'especie', 'sexo', 'duenio', 'telefono', 'activo']"
-            showGridlines
-        >
-            <template #header>
-                <div class="flex justify-between">
-                    <Button type="button" icon="pi pi-filter-slash" label="Borrar" outlined @click="clearFilter()" />
-                    <IconField>
-                        <InputIcon>
-                            <i class="pi pi-search" />
-                        </InputIcon>
-                        <InputText v-model="filtros['global'].value" placeholder="Buscar por..." />
-                    </IconField>
-                </div>
+    <DataTable :value="props.mascotas" :paginator="true" :rows="10" dataKey="id" :rowHover="true" v-model:filters="filtros" filterDisplay="menu" :loading="props.loading" showGridlines>
+        <template #header>
+            <div class="flex justify-start">
+                <Button type="button" icon="pi pi-filter-slash" label="Limpiar Filtros" outlined @click="clearFilter()" />
+            </div>
+        </template>
+
+        <template #empty> No se encontraron resultados. </template>
+        <template #loading> Cargando los datos. Espere un momento. </template>
+
+        <Column field="nombre" header="Nombre" style="min-width: 12rem">
+            <template #filter="{ filterModel }">
+                <InputText v-model="filterModel.value" type="text" placeholder="Buscar por nombre" />
             </template>
-            <template #empty> No se encontraron resultados. </template>
-            <template #loading> Cargando los datos. Espere un momento. </template>
-            <!-- Columna 1 -->
-            <Column field="nombre" header="Nombre" style="min-width: 12rem">
-                <template #body="{ data }">
-                    {{ data.nombre }}
-                </template>
-                <template #filter="{ filterModel }">
-                    <InputText v-model="filterModel.value" type="text" placeholder="Buscar por nombre" />
-                </template>
-            </Column>
-            <!-- Columna 2 -->
-            <Column header="Especie" filterField="especie" style="min-width: 12rem">
-                <template #body="{ data }">
-                    {{ data.especie }}
-                </template>
-                <template #filter="{ filterModel }">
-                    <InputText v-model="filterModel.value" type="text" placeholder="Buscar por especie" />
-                </template>
-            </Column>
-            <!-- Columna 3 -->
-            <Column header="Sexo" filterField="sexo" style="min-width: 10rem">
-                <template #body="{ data }">
-                    <div class="flex items-center gap-2">
-                        <span>{{ data.sexo }}</span>
-                    </div>
-                </template>
-                <template #filter="{ filterModel }">
-                    <InputText v-model="filterModel.value" type="text" placeholder="Buscar por sexo" />
-                </template>
-            </Column>
-            <!-- Columna 4 -->
-            <Column header="Dueño" filterField="duenio" style="min-width: 10rem">
-                <template #body="{ data }">
-                    <div class="flex items-center gap-2">
-                        <span>{{ data.nombreCliente }}</span>
-                    </div>
-                </template>
-                <template #filter="{ filterModel }">
-                    <InputText v-model="filterModel.value" type="text" placeholder="Buscar por dueño" />
-                </template>
-            </Column>
-            <!-- Columna 5 -->
-            <Column header="Teléfono" filterField="telefono" style="min-width: 10rem">
-                <template #body="{ data }">
-                    <div class="flex items-center gap-2">
-                        <span>{{ data.telefonoCliente }}</span>
-                    </div>
-                </template>
-                <template #filter="{ filterModel }">
-                    <InputText v-model="filterModel.value" type="text" placeholder="Buscar por telefono" />
-                </template>
-            </Column>
-            <!-- Columna 6 -->
-            <Column field="activo" header="Status" dataType="boolean" bodyClass="text-center" style="min-width: 8rem">
-                <template #body="{ data }">
-                    <span class="p-2 rounded text-white" :class="{ 'bg-green-500': data.activo, 'bg-red-500': !data.activo }">
-                        <i class="pi text-white" :class="{ 'pi-check-circle': data.activo, 'pi-times-circle': !data.activo }"></i>
-                        {{ data.activo ? 'Activo' : 'Inactivo' }}
-                    </span>
-                </template>
-                <template #filter="{ filterModel }">
-                    <label for="verified-filter" class="font-bold"> Verified </label>
-                    <Checkbox v-model="filterModel.value" :indeterminate="filterModel.value === null" binary inputId="verified-filter" />
-                </template>
-            </Column>
-            <!-- Columna 7 -->
-            <Column header="Acciones" bodyClass="text-center" style="min-width: 8rem">
-                <template #body="slotProps">
+        </Column>
+
+        <Column field="especie" header="Especie" style="min-width: 12rem">
+            <template #filter="{ filterModel }">
+                <InputText v-model="filterModel.value" type="text" placeholder="Buscar por especie" />
+            </template>
+        </Column>
+
+        <Column field="sexo" header="Sexo" style="min-width: 10rem">
+            <template #filter="{ filterModel }">
+                <InputText v-model="filterModel.value" type="text" placeholder="Buscar por sexo" />
+            </template>
+        </Column>
+
+        <Column header="Dueño" filterField="nombreCliente" style="min-width: 10rem">
+            <template #body="{ data }">
+                {{ data.nombreCliente }}
+            </template>
+            <template #filter="{ filterModel }">
+                <InputText v-model="filterModel.value" type="text" placeholder="Buscar por dueño" />
+            </template>
+        </Column>
+
+        <Column header="Teléfono" filterField="telefonoCliente" style="min-width: 10rem">
+            <template #body="{ data }">
+                {{ data.telefonoCliente }}
+            </template>
+            <template #filter="{ filterModel }">
+                <InputText v-model="filterModel.value" type="text" placeholder="Buscar por teléfono" />
+            </template>
+        </Column>
+
+        <Column field="activo" header="Estatus" dataType="boolean" style="min-width: 10rem">
+            <template #body="{ data }">
+                <Tag :severity="data.activo ? 'success' : 'danger'" :value="data.activo ? 'Activo' : 'Inactivo'" />
+            </template>
+            <template #filter="{ filterModel, filterCallback }">
+                <Dropdown v-model="filterModel.value" @change="filterCallback()" :options="statuses" optionLabel="label" optionValue="value" placeholder="Cualquiera">
+                    <template #option="slotProps">
+                        <Tag :severity="slotProps.option.value ? 'success' : 'danger'" :value="slotProps.option.label" />
+                    </template>
+                </Dropdown>
+            </template>
+        </Column>
+
+        <Column header="Acciones" bodyClass="text-center" style="min-width: 8rem">
+            <template #body="slotProps">
+                <div class="flex gap-2 justify-center" v-if="slotProps.data.activo">
                     <Button icon="pi pi-pencil" severity="secondary" rounded @click="$emit('editarMascota', slotProps.data)" />
                     <Button icon="pi pi-trash" severity="danger" rounded @click="confirmarEliminar(slotProps.data)" />
-                </template>
-            </Column>
-        </DataTable>
-    </div>
+                </div>
+            </template>
+        </Column>
+    </DataTable>
 </template>
 
 <style scoped lang="scss">
