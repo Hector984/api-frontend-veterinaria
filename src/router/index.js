@@ -17,12 +17,12 @@ const router = createRouter({
                 {
                     path: '/veterinarias',
                     name: 'veterinarias',
-                    component: () => import('@/views/pages/veterinarias/AdminPanel.vue')
+                    component: () => import('@/modules/admin/PanelAdministrador.vue')
                 },
                 {
                     path: '/mi-veterinaria',
                     name: 'mi-veterinaria',
-                    component: () => import('@/views/pages/veterinarias/MiVeterinaria.vue')
+                    component: () => import('@/modules/veterinaria/views/DashboardVeterinaria.vue')
                 },
                 {
                     path: '/uikit/formlayout',

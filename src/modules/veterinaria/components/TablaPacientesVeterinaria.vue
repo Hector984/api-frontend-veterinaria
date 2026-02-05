@@ -7,11 +7,6 @@ const props = defineProps({
         type: Array,
         required: true,
         default: () => []
-    },
-    loading: {
-        type: Boolean,
-        required: true,
-        default: false
     }
 });
 
@@ -42,7 +37,7 @@ onBeforeMount(() => {
 </script>
 
 <template>
-    <DataTable :value="props.mascotas" :paginator="true" :rows="10" dataKey="id" :rowHover="true" v-model:filters="filtros" filterDisplay="menu" :loading="props.loading" showGridlines>
+    <DataTable :value="props.mascotas" :paginator="true" :rows="10" dataKey="id" :rowHover="true" v-model:filters="filtros" filterDisplay="menu" showGridlines>
         <template #header>
             <div class="flex justify-start">
                 <Button type="button" icon="pi pi-filter-slash" label="Limpiar Filtros" outlined @click="clearFilter()" />
