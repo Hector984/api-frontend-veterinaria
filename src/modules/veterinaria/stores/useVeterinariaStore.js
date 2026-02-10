@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import * as veterinariaService from '../services/veterinariaService';
 
-export const useVeterinariaStore = defineStore('veterinary', () => {
+export const useVeterinariaStore = defineStore('veterinaria', () => {
     const idVeterinaria = ref(null);
     const mascotas = ref([]);
     const datosVeterinaria = ref(null);

@@ -1,30 +1,21 @@
 <script setup>
-import { useLoadingStore } from '@/stores/useLoadingStore';
+import { useMascotaStore } from '@/modules/mascotas/stores/useMascotaStore';
 import { computed, ref } from 'vue';
-import FormularioRegistrarCliente from './FormularioRegistrarCliente.vue';
 import FormularioRegistrarMascota from './FormularioRegistrarMascota.vue';
 
-const props = defineProps({
-    mascota: {
-        type: Object,
-        default: null
-    }
-});
-
-const loadingStore = useLoadingStore();
-
 const visible = defineModel('visible', { type: Boolean });
+const mascotaStore = useMascotaStore();
 
 const activeStep = ref(1);
 
-const modoEdicion = computed(() => !!props.mascota.nombre);
+const modoEdicion = computed(() => !!mascotaStore.editarDatosMascota);
 const tituloFormulario = computed(() => (modoEdicion.value ? 'Editar información de la mascota' : 'Registrar datos de la mascota'));
 const headerFormulario = computed(() => (modoEdicion.value ? 'Editar mascota' : 'Registrar mascota'));
 const tituloBoton = computed(() => (modoEdicion.value ? 'Editar' : 'Registrar'));
 </script>
 
 <template>
-    <Dialog header="Alta de nuevo paciente" :loading="loadingStore.loading" v-model:visible="visible" :breakpoints="{ '960px': '90vw' }" :style="{ width: '60vw' }" :modal="true">
+    <Dialog header="Alta de nuevo paciente" v-model:visible="visible" :breakpoints="{ '960px': '90vw' }" :style="{ width: '60vw' }" :modal="true">
         <div class="w-full">
             <Stepper v-model:value="activeStep" class="w-full">
                 <StepList class="w-full flex justify-between items-center mb-4">
@@ -65,7 +56,7 @@ const tituloBoton = computed(() => (modoEdicion.value ? 'Editar' : 'Registrar'))
                         <div class="flex flex-col gap-4 w-full" style="min-height: 16rem">
                             <div class="text-center mt-4 mb-2 text-xl font-semibold">{{ tituloFormulario }}</div>
 
-                            <FormularioRegistrarCliente />
+                            <!-- <FormularioRegistrarCliente /> -->
 
                             <div class="flex pt-6 justify-end">
                                 <Button label="Siguiente" icon="pi pi-arrow-right" iconPos="right" @click="activateCallback(2)" />
@@ -78,7 +69,7 @@ const tituloBoton = computed(() => (modoEdicion.value ? 'Editar' : 'Registrar'))
                             <div class="text-center mt-4 mb-2 text-xl font-semibold">{{ tituloFormulario }}</div>
 
                             <div class="w-full">
-                                <FormularioRegistrarMascota :mascota="props.mascota" />
+                                <FormularioRegistrarMascota />
                             </div>
 
                             <div class="flex pt-6 justify-between">
