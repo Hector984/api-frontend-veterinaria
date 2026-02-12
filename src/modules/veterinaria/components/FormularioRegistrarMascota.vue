@@ -8,6 +8,10 @@ import { useToast } from 'primevue';
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import { useVeterinariaStore } from '../stores/useVeterinariaStore';
 
+const props = defineProps({
+    modoEdicion: Boolean
+});
+
 const emits = defineEmits(['cerrarFormulario']);
 
 const mascotaStore = useMascotaStore();
@@ -21,14 +25,13 @@ const storeVeterinaria = useVeterinariaStore();
 const { obtenerIdVeterinaria } = storeToRefs(storeVeterinaria);
 const { actualizarMascotas } = storeVeterinaria;
 
-const modoEdicion = computed(() => !!mascotaStore.editarDatosMascota);
-const tituloFormulario = computed(() => (modoEdicion.value ? 'Editar información de la mascota' : 'Registrar datos de la mascota'));
-const headerFormulario = computed(() => (modoEdicion.value ? 'Editar mascota' : 'Registrar mascota'));
-const tituloBoton = computed(() => (modoEdicion.value ? 'Editar' : 'Registrar'));
+const tituloFormulario = computed(() => (props.modoEdicion ? 'Editar información de la mascota' : 'Registrar datos de la mascota'));
+const headerFormulario = computed(() => (props.modoEdicion ? 'Editar mascota' : 'Registrar mascota'));
+const tituloBoton = computed(() => (props.modoEdicion ? 'Editar' : 'Registrar'));
 
 const toast = useToast();
 
-const formularioValido = ref(modoEdicion.value);
+const formularioValido = ref(props.modoEdicion);
 
 const datosFormulario = reactive({
     nombre: '',
@@ -186,7 +189,7 @@ const onSubmit = async () => {
 
 const obtenerClientesPorVeterinariaId = async () => {
     const respuesta = await clienteStore.fetchClientesPorVeterinariaId(storeVeterinaria.idVeterinaria);
-    if (respuesta.status == 200 && modoEdicion.value) {
+    if (respuesta.status == 200 && props.modoEdicion) {
         const mascota = useMascotaStore.datosMascota;
         datosFormulario.clienteId = clienteStore.clientes.find((x) => x.id === mascota.clienteId);
     } else if (respuesta?.status === 404) {
@@ -242,7 +245,7 @@ watch(
 onMounted(async () => {
     await obtenerClientesPorVeterinariaId();
 
-    if (modoEdicion.value) {
+    if (props.modoEdicion) {
         Object.assign(datosFormulario, useMascotaStore.datosMascota);
         datosFormulario.fechaNacimiento = new Date(useMascotaStore.datosMascota.fechaNacimiento).toISOString().split('T')[0];
     }
@@ -306,12 +309,6 @@ onMounted(async () => {
                     <Textarea v-model.trim="datosFormulario.observaciones" id="observaciones" rows="1" autoResize
                         placeholder="Características de la mascota..." />
                 </div>
-            </div>
-
-            <div class="flex justify-end gap-3 mt-4">
-                <Button label="Cerrar" icon="pi pi-times" severity="secondary" @click="cerrarFormulario" />
-                <Button type="submit" :label="tituloBoton" icon="pi pi-check" :disabled="!formularioValido"
-                    @click="onSubmit" />
             </div>
         </div>
     </form>
