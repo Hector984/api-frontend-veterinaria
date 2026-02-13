@@ -60,12 +60,13 @@ onMounted(async () => {
                 @abrir-formulario-mascota="abrirFormularioMascota" />
         </div>
 
-        <FormularioRegistrarVeterinaria
+        <FormularioRegistrarVeterinaria v-if="veterinariaStore.mostarFormularioRegistroVeterinaria"
             :showRegisterVeterinaryForm="veterinariaStore.mostarFormularioRegistroVeterinaria" />
 
         <FormularioDosPasos v-if="mostarFormularioDosPasos" v-model:visible="mostarFormularioDosPasos"
             @cerrar-formulario="cerrarFormulario" />
 
-        <TablaPacientesVeterinaria :mascotas="veterinariaStore.mascotas" @editar-mascota="obtenerDatosMascota" />
+        <TablaPacientesVeterinaria v-if="veterinariaStore.mascotas" :mascotas="veterinariaStore.mascotas"
+            @editar-mascota="obtenerDatosMascota" />
     </Fluid>
 </template>

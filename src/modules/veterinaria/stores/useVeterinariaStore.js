@@ -9,7 +9,7 @@ export const useVeterinariaStore = defineStore('veterinaria', () => {
     const datosVeterinaria = ref(null);
 
     // Computed
-    const mostarFormularioRegistroVeterinaria = computed(() => !!datosVeterinaria.value?.nombre);
+    const mostarFormularioRegistroVeterinaria = computed(() => !idVeterinaria.value);
 
     // Setters
 

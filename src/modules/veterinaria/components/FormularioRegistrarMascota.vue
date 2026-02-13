@@ -12,10 +12,12 @@ const props = defineProps({
     modoEdicion: Boolean
 });
 
-const emits = defineEmits(['cerrarFormulario']);
+const emits = defineEmits(['formulario-mascota-valido']);
 
 const mascotaStore = useMascotaStore();
 const clienteStore = useClienteStore();
+
+const { datosMascota } = storeToRefs(mascotaStore);
 
 const bloquearWatch = ref(false);
 
@@ -25,24 +27,9 @@ const storeVeterinaria = useVeterinariaStore();
 const { obtenerIdVeterinaria } = storeToRefs(storeVeterinaria);
 const { actualizarMascotas } = storeVeterinaria;
 
-const tituloFormulario = computed(() => (props.modoEdicion ? 'Editar información de la mascota' : 'Registrar datos de la mascota'));
-const headerFormulario = computed(() => (props.modoEdicion ? 'Editar mascota' : 'Registrar mascota'));
-const tituloBoton = computed(() => (props.modoEdicion ? 'Editar' : 'Registrar'));
-
 const toast = useToast();
 
 const formularioValido = ref(props.modoEdicion);
-
-const datosFormulario = reactive({
-    nombre: '',
-    especie: '',
-    sexo: '',
-    edad: 0,
-    peso: 0,
-    fechaNacimiento: null,
-    observaciones: '',
-    clienteId: null
-});
 
 const erroresFormulario = reactive({
     nombre: '',
@@ -57,18 +44,18 @@ const erroresFormulario = reactive({
 
 const prepararDatos = () => {
     return {
-        ...datosFormulario,
+        ...datosMascota,
         veterinariaId: obtenerIdVeterinaria.value,
-        clienteId: parseInt(datosFormulario.clienteId.id)
+        clienteId: parseInt(datosMascota.clienteId.id)
     };
 };
 
 const validarFormulario = (event) => {
-    if (typeof datosFormulario[event.target.id] === 'string' && datosFormulario[event.target.id] === '') {
+    if (typeof datosMascota[event.target.id] === 'string' && datosMascota[event.target.id] === '') {
         toast.add({ severity: 'error', summary: 'Error', detail: `El campo ${event.target.id} es obligatorio.`, life: 3000 });
         erroresFormulario[event.target.id] = `El campo ${event.target.id} es obligatorio.`;
         formularioValido.value = false;
-    } else if (typeof datosFormulario[event.target.id] === 'number' && datosFormulario[event.target.id] === 0) {
+    } else if (typeof datosMascota[event.target.id] === 'number' && datosMascota[event.target.id] === 0) {
         toast.add({ severity: 'error', summary: 'Error', detail: `El campo ${event.target.id} tiene que ser mayor a cero.`, life: 3000 });
         erroresFormulario[event.target.id] = `El campo ${event.target.id} tiene que ser mayor a cero.`;
         formularioValido.value = false;
@@ -79,7 +66,7 @@ const validarFormulario = (event) => {
 };
 
 const mostrarErroresFormulario = () => {
-    Object.entries(datosFormulario).forEach(([campo, valor]) => {
+    Object.entries(datosMascota).forEach(([campo, valor]) => {
         if (valor === '' || valor === 0 || !valor) {
             erroresFormulario[campo] = `El campo es obligatorio.`;
         }
@@ -87,14 +74,14 @@ const mostrarErroresFormulario = () => {
 };
 
 const limpiarFormulario = () => {
-    datosFormulario.nombre = '';
-    datosFormulario.especie = '';
-    datosFormulario.sexo = '';
-    datosFormulario.edad = 0;
-    datosFormulario.peso = 0;
-    datosFormulario.fechaNacimiento = null;
-    datosFormulario.observaciones = '';
-    datosFormulario.clienteId = null;
+    datosMascota.nombre = '';
+    datosMascota.especie = '';
+    datosMascota.sexo = '';
+    datosMascota.edad = 0;
+    datosMascota.peso = 0;
+    datosMascota.fechaNacimiento = null;
+    datosMascota.observaciones = '';
+    datosMascota.clienteId = null;
 };
 
 const calcularEdadDesdeFecha = (fechaNacimiento) => {
@@ -120,8 +107,8 @@ const calcularFechaDesdeEdad = (nuevaEdad) => {
     let fechaReferencia;
 
     // Si ya hay una fecha en el formulario, la usamos como base para mes y día
-    if (datosFormulario.fechaNacimiento) {
-        fechaReferencia = new Date(datosFormulario.fechaNacimiento);
+    if (datosMascota.fechaNacimiento) {
+        fechaReferencia = new Date(datosMascota.fechaNacimiento);
     } else {
         fechaReferencia = hoy;
     }
@@ -147,11 +134,7 @@ const registrarMascota = async () => {
 
 const actualizarMascota = async () => {
     const datos = prepararDatos();
-    return await api.put(`mascotas/${datosFormulario.clienteId.id}`, datos);
-};
-
-const cerrarFormulario = () => {
-    emits('cerrarFormulario');
+    return await api.put(`mascotas/${datosMascota.clienteId.id}`, datos);
 };
 
 const onSubmit = async () => {
@@ -164,11 +147,10 @@ const onSubmit = async () => {
 
         setLoading(true);
 
-        if (modoEdicion.value) {
+        if (props.modoEdicion) {
             await actualizarMascota();
             toast.add({ severity: 'success', summary: 'Exito', detail: 'Información actualizada.', life: 3000 });
             limpiarFormulario();
-            cerrarFormulario();
         } else {
             const res = await registrarMascota();
             actualizarMascotas(res.data);
@@ -191,7 +173,7 @@ const obtenerClientesPorVeterinariaId = async () => {
     const respuesta = await clienteStore.fetchClientesPorVeterinariaId(storeVeterinaria.idVeterinaria);
     if (respuesta.status == 200 && props.modoEdicion) {
         const mascota = useMascotaStore.datosMascota;
-        datosFormulario.clienteId = clienteStore.clientes.find((x) => x.id === mascota.clienteId);
+        datosMascota.clienteId = clienteStore.clientes.find((x) => x.id === mascota.clienteId);
     } else if (respuesta?.status === 404) {
         alert('La mascota no existe en la base de datos');
     } else {
@@ -199,18 +181,28 @@ const obtenerClientesPorVeterinariaId = async () => {
     }
 };
 
+const mascotaValida = computed(() => {
+    // Verificamos que no haya errores
+    const sinErrores = Object.values(erroresFormulario).every((error) => error === '');
+
+    // Verificamos que los campos obligatorios no estén vacíos
+    const camposLlenos = datosMascota.value.Nombre && datosMascota.value.Sexo && datosMascota.value.Especie && datosMascota.value.FechaNacimiento && datosMascota.value.Edad && datosMascota.value.Peso;
+
+    return sinErrores && camposLlenos;
+});
+
 // 1. Si cambia la fecha de nacimiento -> calculamos edad
 watch(
-    () => datosFormulario.fechaNacimiento,
+    () => datosMascota.value.FechaNacimiento,
     (nuevaFecha) => {
         if (bloquearWatch.value || !nuevaFecha) return;
 
         if (nuevaFecha) {
             const edadCalculada = calcularEdadDesdeFecha(nuevaFecha);
             // Solo actualizamos si es diferente para evitar ciclos
-            if (datosFormulario.edad !== edadCalculada) {
+            if (datosMascota.value?.Edad !== edadCalculada) {
                 bloquearWatch.value = true;
-                datosFormulario.edad = edadCalculada;
+                datosMascota.value.Edad = edadCalculada;
                 nextTick(() => {
                     bloquearWatch.value = false;
                 });
@@ -221,18 +213,18 @@ watch(
 
 // 2. Si cambia la edad -> estimamos fecha de nacimiento
 watch(
-    () => datosFormulario.edad,
+    () => datosMascota.value.Edad,
     (nuevaEdad) => {
         if (bloquearWatch.value || !nuevaEdad) return;
 
         if (nuevaEdad !== null && nuevaEdad !== undefined && nuevaEdad >= 0) {
             // 1. Calculamos cuál es la edad actual según la fecha que tiene el formulario
-            const edadActualSegunFecha = calcularEdadDesdeFecha(datosFormulario.fechaNacimiento);
+            const edadActualSegunFecha = calcularEdadDesdeFecha(datosMascota.FechaNacimiento);
 
             // 2. Si la edad que escribió el veterinario es DIFERENTE a la que dice la fecha,
             // entonces sí actualizamos la fecha.
             if (nuevaEdad !== edadActualSegunFecha) {
-                datosFormulario.fechaNacimiento = calcularFechaDesdeEdad(nuevaEdad);
+                datosMascota.FechaNacimiento = calcularFechaDesdeEdad(nuevaEdad);
                 bloquearWatch.value = true;
                 nextTick(() => {
                     bloquearWatch.value = false;
@@ -242,34 +234,42 @@ watch(
     }
 );
 
+watch(
+    mascotaValida,
+    (newVal) => {
+        emits('formulario-mascota-valido', newVal);
+    },
+    { immediate: true }
+);
+
 onMounted(async () => {
     await obtenerClientesPorVeterinariaId();
 
     if (props.modoEdicion) {
-        Object.assign(datosFormulario, useMascotaStore.datosMascota);
-        datosFormulario.fechaNacimiento = new Date(useMascotaStore.datosMascota.fechaNacimiento).toISOString().split('T')[0];
+        Object.assign(datosMascota, useMascotaStore.datosMascota);
+        datosMascota.FechaNacimiento = new Date(useMascotaStore.datosMascota.fechaNacimiento).toISOString().split('T')[0];
     }
 });
 </script>
 <template>
-    <form class="col-span-12" @submit.prevent="onSubmit">
+    <div class="col-span-12">
         <div class="card flex flex-col gap-6 w-full">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="flex flex-col gap-2">
                     <label for="nombre" class="font-semibold">Nombre *</label>
-                    <InputText v-model.trim="datosFormulario.nombre" id="nombre" placeholder="Capitan"
+                    <InputText v-model.trim="datosMascota.Nombre" id="nombre" placeholder="Capitan"
                         @blur="validarFormulario" :class="{ 'p-invalid': erroresFormulario.nombre }" />
                     <small class="text-red-400" v-if="erroresFormulario.nombre">{{ erroresFormulario.nombre }}</small>
                 </div>
                 <div class="flex flex-col gap-2">
                     <label for="sexo" class="font-semibold">Sexo *</label>
-                    <InputText v-model.trim="datosFormulario.sexo" id="sexo" placeholder="Macho"
+                    <InputText v-model.trim="datosMascota.Sexo" id="sexo" placeholder="Macho"
                         @blur="validarFormulario" :class="{ 'p-invalid': erroresFormulario.sexo }" />
                     <small class="text-red-400" v-if="erroresFormulario.sexo">{{ erroresFormulario.sexo }}</small>
                 </div>
                 <div class="flex flex-col gap-2">
                     <label for="especie" class="font-semibold">Especie *</label>
-                    <InputText v-model.trim="datosFormulario.especie" id="especie" placeholder="Perro"
+                    <InputText v-model.trim="datosMascota.Especie" id="especie" placeholder="Perro"
                         @blur="validarFormulario" :class="{ 'p-invalid': erroresFormulario.especie }" />
                     <small class="text-red-400" v-if="erroresFormulario.especie">{{ erroresFormulario.especie }}</small>
                 </div>
@@ -278,17 +278,17 @@ onMounted(async () => {
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="flex flex-col gap-2">
                     <label for="peso" class="font-semibold">Peso (kg)</label>
-                    <InputText v-model="datosFormulario.peso" id="peso" type="number" />
+                    <InputText v-model="datosMascota.Peso" id="peso" type="number" />
                 </div>
                 <div class="flex flex-col gap-2">
                     <label for="edad" class="font-semibold">Edad *</label>
-                    <InputText v-model="datosFormulario.edad" id="edad" type="number" @blur="validarFormulario"
+                    <InputText v-model="datosMascota.Edad" id="edad" type="number" @blur="validarFormulario"
                         :class="{ 'p-invalid': erroresFormulario.edad }" />
                     <small class="text-red-400" v-if="erroresFormulario.edad">{{ erroresFormulario.edad }}</small>
                 </div>
                 <div class="flex flex-col gap-2">
                     <label for="fechaNacimiento" class="font-semibold">Fecha de nacimiento *</label>
-                    <InputText v-model="datosFormulario.fechaNacimiento" id="fechaNacimiento" type="date"
+                    <InputText v-model="datosMascota.FechaNacimiento" id="fechaNacimiento" type="date"
                         @blur="validarFormulario" :class="{ 'p-invalid': erroresFormulario.fechaNacimiento }" />
                     <small class="text-red-400" v-if="erroresFormulario.fechaNacimiento">{{
                         erroresFormulario.fechaNacimiento }}</small>
@@ -298,7 +298,7 @@ onMounted(async () => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="flex flex-col gap-2">
                     <label for="duenio" class="font-semibold">Dueño *</label>
-                    <Select id="duenio" v-model="datosFormulario.clienteId" :options="clienteStore.clientes"
+                    <Select id="duenio" v-model="datosMascota.ClienteId" :options="clienteStore.clientes"
                         optionLabel="nombre" placeholder="Selecciona al dueño" class="w-full"
                         :class="{ 'p-invalid': erroresFormulario.clienteId }" />
                     <small class="text-red-400" v-if="erroresFormulario.clienteId">{{ erroresFormulario.clienteId
@@ -306,10 +306,10 @@ onMounted(async () => {
                 </div>
                 <div class="flex flex-col gap-2">
                     <label for="observaciones" class="font-semibold">Observaciones</label>
-                    <Textarea v-model.trim="datosFormulario.observaciones" id="observaciones" rows="1" autoResize
+                    <Textarea v-model.trim="datosMascota.Observaciones" id="observaciones" rows="1" autoResize
                         placeholder="Características de la mascota..." />
                 </div>
             </div>
         </div>
-    </form>
+    </div>
 </template>

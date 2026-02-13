@@ -6,18 +6,26 @@ import * as mascotaService from '../services/mascotaService.js';
 export const useMascotaStore = defineStore('mascota', () => {
     const datosMascota = ref({
         id: null,
-        nombre: '',
-        especie: '',
-        sexo: '',
-        edad: 0,
-        peso: 0,
-        fechaNacimiento: null,
-        observaciones: '',
-        clienteId: null,
-        veterinariaId: null
+        Nombre: '',
+        Especie: '',
+        Sexo: '',
+        Edad: 0,
+        Peso: 0,
+        FechaNacimiento: null,
+        Observaciones: '',
+        ClienteId: null,
+        VeterinariaId: null
     });
 
     const editarDatosMascota = ref(false);
+
+    const prepararDatos = () => {
+        return {
+            ...datosMascota,
+            veterinariaId: datosMascota.value.veterinariaId,
+            clienteId: parseInt(datosMascota.value.clienteId.id)
+        };
+    };
 
     const fetchDatosMascota = async (id) => {
         const loadingStore = useLoadingStore();
@@ -37,5 +45,38 @@ export const useMascotaStore = defineStore('mascota', () => {
         }
     };
 
-    return { fetchDatosMascota, datosMascota };
+    const registrarMascota = async () => {
+        const loadingStore = useLoadingStore();
+        try {
+            // if (!formularioValido.value) {
+            //     mostrarErroresFormulario();
+            //     toast.add({ severity: 'error', summary: 'Error', detail: 'El formulario tiene errores.', life: 3000 });
+            //     return;
+            // }
+
+            loadingStore.setLoading(true);
+
+            if (editarDatosMascota.value) {
+                await mascotaService.actualizarMascota(datosMascota.value.id, prepararDatos());
+                // toast.add({ severity: 'success', summary: 'Exito', detail: 'Información actualizada.', life: 3000 });
+                // limpiarFormulario();
+            } else {
+                const res = await mascotaService.registrarMascota(prepararDatos());
+                console.log(res.data);
+                // actualizarMascotas(res.data);
+                // toast.add({ severity: 'success', summary: 'Exito', detail: 'Mascota registrada.', life: 3000 });
+                // limpiarFormulario();
+            }
+        } catch (error) {
+            if (error.response) {
+                console.error('Error en el servidor:', error);
+            } else {
+                console.error('Error en la petición:', error);
+            }
+        } finally {
+            loadingStore.setLoading(false);
+        }
+    };
+
+    return { fetchDatosMascota, datosMascota, editarDatosMascota, registrarMascota };
 });
