@@ -1,6 +1,7 @@
+import { useVeterinariaStore } from '@/modules/veterinaria/stores/useVeterinariaStore.js';
 import { useLoadingStore } from '@/stores/useLoadingStore.js';
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, toRaw } from 'vue';
 import * as mascotaService from '../services/mascotaService.js';
 
 export const useMascotaStore = defineStore('mascota', () => {
@@ -20,11 +21,20 @@ export const useMascotaStore = defineStore('mascota', () => {
     const editarDatosMascota = ref(false);
 
     const prepararDatos = () => {
+        const veterinariaStore = useVeterinariaStore();
+        const clienteId = datosMascota.value.ClienteId.id;
+        const datosBase = toRaw(datosMascota.value);
+
         return {
-            ...datosMascota,
-            veterinariaId: datosMascota.value.veterinariaId,
-            clienteId: parseInt(datosMascota.value.clienteId.id)
+            ...datosBase,
+            VeterinariaId: veterinariaStore.idVeterinaria,
+            ClienteId: parseInt(clienteId)
         };
+    };
+
+    const seleccionarCliente = (cliente) => {
+        console.log(cliente);
+        datosMascota.value.ClienteId = cliente;
     };
 
     const fetchDatosMascota = async (id) => {
@@ -78,5 +88,5 @@ export const useMascotaStore = defineStore('mascota', () => {
         }
     };
 
-    return { fetchDatosMascota, datosMascota, editarDatosMascota, registrarMascota };
+    return { fetchDatosMascota, datosMascota, editarDatosMascota, registrarMascota, seleccionarCliente };
 });

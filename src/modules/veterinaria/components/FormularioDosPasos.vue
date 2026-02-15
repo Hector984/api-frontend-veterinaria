@@ -21,20 +21,26 @@ const tituloBoton = computed(() => (modoEdicion.value ? 'Editar Paciente' : 'Reg
 
 const enviarFormulario = async () => {
     if (formularioMascotaValido.value) {
-        await clienteStore.registrarCliente();
-        // await mascotaStore.registrarMascota();
+        await mascotaStore.registrarMascota();
+        cerrarFormulario();
     }
 };
 
 const registrarCliente = async () => {
     if (formularioClienteValido.value) {
         try {
-            await clienteStore.registrarCliente();
+            const respuesta = await clienteStore.registrarCliente();
+            mascotaStore.seleccionarCliente(respuesta.data);
             activeStep.value = 2;
+            console.log(respuesta.data);
         } catch (error) {
             console.log();
         }
     }
+};
+
+const habilitarRegistroMascota = () => {
+    activeStep.value = 2;
 };
 
 // watch([formularioClienteValido, formularioMascotaValido], async (clienteValido, mascotaValida) => {
@@ -107,6 +113,8 @@ const cerrarFormulario = () => {
 
                 <div class="flex justify-end gap-3 mt-4">
                     <Button label="Cancelar" icon="pi pi-times" severity="secondary" @click="cerrarFormulario" />
+                    <Button v-if="activeStep === 1" label="¿Ya estas registrado?" icon="pi pi-times"
+                        severity="secondary" @click="habilitarRegistroMascota" />
 
                     <Button v-if="activeStep === 1" type="button" label="Siguiente: Datos Mascota"
                         icon="pi pi-arrow-right" iconPos="right" :disabled="!formularioClienteValido"
@@ -115,6 +123,9 @@ const cerrarFormulario = () => {
                     <Button v-if="activeStep === 2" label="Atrás" severity="secondary" icon="pi pi-arrow-left"
                         @click="activeStep = 1" />
 
+                    <!-- <Button v-if="activeStep === 2" :label="tituloBoton" icon="pi pi-check"
+                        :disabled="!formularioMascotaValido" 
+                        @click="enviarFormulario" /> -->
                     <Button v-if="activeStep === 2" :label="tituloBoton" icon="pi pi-check"
                         :disabled="!formularioMascotaValido" @click="enviarFormulario" />
                 </div>

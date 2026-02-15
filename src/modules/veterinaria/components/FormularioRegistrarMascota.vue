@@ -1,5 +1,4 @@
 <script setup>
-import api from '@/api/axios.js';
 import { useClienteStore } from '@/modules/clientes/stores/useClienteStore';
 import { useMascotaStore } from '@/modules/mascotas/stores/useMascotaStore';
 import { useLoadingStore } from '@/stores/useLoadingStore';
@@ -41,14 +40,6 @@ const erroresFormulario = reactive({
     observaciones: '',
     clienteId: ''
 });
-
-const prepararDatos = () => {
-    return {
-        ...datosMascota,
-        veterinariaId: obtenerIdVeterinaria.value,
-        clienteId: parseInt(datosMascota.clienteId.id)
-    };
-};
 
 const validarFormulario = (event) => {
     if (typeof datosMascota[event.target.id] === 'string' && datosMascota[event.target.id] === '') {
@@ -107,8 +98,8 @@ const calcularFechaDesdeEdad = (nuevaEdad) => {
     let fechaReferencia;
 
     // Si ya hay una fecha en el formulario, la usamos como base para mes y día
-    if (datosMascota.fechaNacimiento) {
-        fechaReferencia = new Date(datosMascota.fechaNacimiento);
+    if (datosMascota.value.FechaNacimiento) {
+        fechaReferencia = new Date(datosMascota.value.FechaNacimiento);
     } else {
         fechaReferencia = hoy;
     }
@@ -128,52 +119,52 @@ const calcularFechaDesdeEdad = (nuevaEdad) => {
     return `${yyyy}-${mm}-${dd}`;
 };
 
-const registrarMascota = async () => {
-    return await api.post('mascotas', prepararDatos());
-};
+// const registrarMascota = async () => {
+//     return await api.post('mascotas', prepararDatos());
+// };
 
-const actualizarMascota = async () => {
-    const datos = prepararDatos();
-    return await api.put(`mascotas/${datosMascota.clienteId.id}`, datos);
-};
+// const actualizarMascota = async () => {
+//     const datos = prepararDatos();
+//     return await api.put(`mascotas/${datosMascota.clienteId.id}`, datos);
+// };
 
-const onSubmit = async () => {
-    try {
-        if (!formularioValido.value) {
-            mostrarErroresFormulario();
-            toast.add({ severity: 'error', summary: 'Error', detail: 'El formulario tiene errores.', life: 3000 });
-            return;
-        }
+// const onSubmit = async () => {
+//     try {
+//         if (!formularioValido.value) {
+//             mostrarErroresFormulario();
+//             toast.add({ severity: 'error', summary: 'Error', detail: 'El formulario tiene errores.', life: 3000 });
+//             return;
+//         }
 
-        setLoading(true);
+//         setLoading(true);
 
-        if (props.modoEdicion) {
-            await actualizarMascota();
-            toast.add({ severity: 'success', summary: 'Exito', detail: 'Información actualizada.', life: 3000 });
-            limpiarFormulario();
-        } else {
-            const res = await registrarMascota();
-            actualizarMascotas(res.data);
-            toast.add({ severity: 'success', summary: 'Exito', detail: 'Mascota registrada.', life: 3000 });
-            limpiarFormulario();
-        }
-    } catch (error) {
-        setLoading(false);
-        if (error.response) {
-            console.error('Error en el servidor:', error);
-        } else {
-            console.error('Error en la petición:', error);
-        }
-    } finally {
-        setLoading(false);
-    }
-};
+//         if (props.modoEdicion) {
+//             await actualizarMascota();
+//             toast.add({ severity: 'success', summary: 'Exito', detail: 'Información actualizada.', life: 3000 });
+//             limpiarFormulario();
+//         } else {
+//             const res = await registrarMascota();
+//             actualizarMascotas(res.data);
+//             toast.add({ severity: 'success', summary: 'Exito', detail: 'Mascota registrada.', life: 3000 });
+//             limpiarFormulario();
+//         }
+//     } catch (error) {
+//         setLoading(false);
+//         if (error.response) {
+//             console.error('Error en el servidor:', error);
+//         } else {
+//             console.error('Error en la petición:', error);
+//         }
+//     } finally {
+//         setLoading(false);
+//     }
+// };
 
 const obtenerClientesPorVeterinariaId = async () => {
     const respuesta = await clienteStore.fetchClientesPorVeterinariaId(storeVeterinaria.idVeterinaria);
     if (respuesta.status == 200 && props.modoEdicion) {
         const mascota = useMascotaStore.datosMascota;
-        datosMascota.clienteId = clienteStore.clientes.find((x) => x.id === mascota.clienteId);
+        datosMascota.value.ClienteId = clienteStore.clientes.find((x) => x.id === mascota.value.ClienteId);
     } else if (respuesta?.status === 404) {
         alert('La mascota no existe en la base de datos');
     } else {
@@ -186,9 +177,9 @@ const mascotaValida = computed(() => {
     const sinErrores = Object.values(erroresFormulario).every((error) => error === '');
 
     // Verificamos que los campos obligatorios no estén vacíos
-    const camposLlenos = datosMascota.value.Nombre && datosMascota.value.Sexo && datosMascota.value.Especie && datosMascota.value.FechaNacimiento && datosMascota.value.Edad && datosMascota.value.Peso;
+    // const camposLlenos = datosMascota.value.Nombre && datosMascota.value.Sexo && datosMascota.value.Especie && datosMascota.value.FechaNacimiento && datosMascota.value.Edad && datosMascota.value.Peso;
 
-    return sinErrores && camposLlenos;
+    return sinErrores;
 });
 
 // 1. Si cambia la fecha de nacimiento -> calculamos edad
@@ -224,7 +215,7 @@ watch(
             // 2. Si la edad que escribió el veterinario es DIFERENTE a la que dice la fecha,
             // entonces sí actualizamos la fecha.
             if (nuevaEdad !== edadActualSegunFecha) {
-                datosMascota.FechaNacimiento = calcularFechaDesdeEdad(nuevaEdad);
+                datosMascota.value.FechaNacimiento = calcularFechaDesdeEdad(nuevaEdad);
                 bloquearWatch.value = true;
                 nextTick(() => {
                     bloquearWatch.value = false;
@@ -247,7 +238,7 @@ onMounted(async () => {
 
     if (props.modoEdicion) {
         Object.assign(datosMascota, useMascotaStore.datosMascota);
-        datosMascota.FechaNacimiento = new Date(useMascotaStore.datosMascota.fechaNacimiento).toISOString().split('T')[0];
+        datosMascota.value.FechaNacimiento = new Date(datosMascota.value.FechaNacimiento).toISOString().split('T')[0];
     }
 });
 </script>
@@ -263,8 +254,8 @@ onMounted(async () => {
                 </div>
                 <div class="flex flex-col gap-2">
                     <label for="sexo" class="font-semibold">Sexo *</label>
-                    <InputText v-model.trim="datosMascota.Sexo" id="sexo" placeholder="Macho"
-                        @blur="validarFormulario" :class="{ 'p-invalid': erroresFormulario.sexo }" />
+                    <InputText v-model.trim="datosMascota.Sexo" id="sexo" placeholder="Macho" @blur="validarFormulario"
+                        :class="{ 'p-invalid': erroresFormulario.sexo }" />
                     <small class="text-red-400" v-if="erroresFormulario.sexo">{{ erroresFormulario.sexo }}</small>
                 </div>
                 <div class="flex flex-col gap-2">
