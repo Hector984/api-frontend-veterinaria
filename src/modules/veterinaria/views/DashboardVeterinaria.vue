@@ -1,7 +1,7 @@
 <script setup>
 import { useMascotaStore } from '@/modules/mascotas/stores/useMascotaStore';
 import { onMounted, ref } from 'vue';
-import FormularioDosPasos from '../components/FormularioDosPasos.vue';
+import FormularioDosPasos from '@/modules/mascotas/components/FormularioDosPasos.vue';
 import FormularioRegistrarVeterinaria from '../components/FormularioRegistrarVeterinaria.vue';
 import TablaPacientesVeterinaria from '../components/TablaPacientesVeterinaria.vue';
 import VeterinariaInfoCard from '../components/VeterinariaInfoCard.vue';
@@ -28,19 +28,7 @@ function abrirFormularioMascota() {
     mostarFormularioDosPasos.value = true;
 }
 
-// const limpiarFormulario = () => {
-//     datosMascota.nombre = '';
-//     datosMascota.especie = '';
-//     datosMascota.sexo = '';
-//     datosMascota.edad = 0;
-//     datosMascota.peso = 0;
-//     datosMascota.fechaNacimiento = null;
-//     datosMascota.observaciones = '';
-//     datosMascota.clienteId = null;
-// };
-
 const cerrarFormulario = async () => {
-    // limpiarFormulario();
     mostarFormularioDosPasos.value = false;
     await veterinariaStore.fetchDatosVeterinaria();
 };

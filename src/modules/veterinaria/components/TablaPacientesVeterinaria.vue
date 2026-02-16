@@ -1,6 +1,9 @@
 <script setup>
 import { FilterMatchMode } from '@primevue/core/api';
 import { onBeforeMount, ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const props = defineProps({
     mascotas: {
@@ -29,6 +32,10 @@ const initFilters = () => {
 
 const clearFilter = () => {
     initFilters();
+};
+
+const editarMascota = (mascota) => {
+    router.push({ name: 'editar-mascota', params: { id: mascota.id } });
 };
 
 onBeforeMount(() => {
@@ -99,7 +106,7 @@ onBeforeMount(() => {
         <Column header="Acciones" bodyClass="text-center" style="min-width: 8rem">
             <template #body="slotProps">
                 <div class="flex gap-2 justify-center" v-if="slotProps.data.activo">
-                    <Button icon="pi pi-pencil" severity="secondary" rounded @click="$emit('editarMascota', slotProps.data)" />
+                    <Button icon="pi pi-pencil" severity="secondary" rounded @click="editarMascota(slotProps.data)" />
                     <Button icon="pi pi-trash" severity="danger" rounded @click="confirmarEliminar(slotProps.data)" />
                 </div>
             </template>

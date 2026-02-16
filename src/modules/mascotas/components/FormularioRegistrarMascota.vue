@@ -1,15 +1,10 @@
 <script setup>
 import { useClienteStore } from '@/modules/clientes/stores/useClienteStore';
 import { useMascotaStore } from '@/modules/mascotas/stores/useMascotaStore';
-import { useLoadingStore } from '@/stores/useLoadingStore';
+import { useNotificacionesStore } from '@/modules/notificaciones/store/useNotificaciones';
 import { storeToRefs } from 'pinia';
-import { useToast } from 'primevue';
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
-import { useVeterinariaStore } from '../stores/useVeterinariaStore';
-
-const props = defineProps({
-    modoEdicion: Boolean
-});
+import { useVeterinariaStore } from '@/modules/veterinaria/stores/useVeterinariaStore';
 
 const emits = defineEmits(['formulario-mascota-valido']);
 
@@ -20,15 +15,9 @@ const { datosMascota } = storeToRefs(mascotaStore);
 
 const bloquearWatch = ref(false);
 
-const store = useLoadingStore();
-const { setLoading } = store;
 const storeVeterinaria = useVeterinariaStore();
-const { obtenerIdVeterinaria } = storeToRefs(storeVeterinaria);
-const { actualizarMascotas } = storeVeterinaria;
 
-const toast = useToast();
-
-const formularioValido = ref(props.modoEdicion);
+const notificacionesStore = useNotificacionesStore();
 
 const erroresFormulario = reactive({
     nombre: '',
@@ -41,38 +30,60 @@ const erroresFormulario = reactive({
     clienteId: ''
 });
 
+const sexoOptions = ref(['Macho', 'Hembra']);
+
 const validarFormulario = (event) => {
-    if (typeof datosMascota[event.target.id] === 'string' && datosMascota[event.target.id] === '') {
-        toast.add({ severity: 'error', summary: 'Error', detail: `El campo ${event.target.id} es obligatorio.`, life: 3000 });
-        erroresFormulario[event.target.id] = `El campo ${event.target.id} es obligatorio.`;
-        formularioValido.value = false;
-    } else if (typeof datosMascota[event.target.id] === 'number' && datosMascota[event.target.id] === 0) {
-        toast.add({ severity: 'error', summary: 'Error', detail: `El campo ${event.target.id} tiene que ser mayor a cero.`, life: 3000 });
-        erroresFormulario[event.target.id] = `El campo ${event.target.id} tiene que ser mayor a cero.`;
-        formularioValido.value = false;
+    const campoId = event.target.id;
+    let nombrePropiedadMascota;
+
+    // Mapeo de IDs de input a nombres de propiedad en datosMascota (camelCase a PascalCase si es necesario)
+    if (campoId === 'fechaNacimiento') {
+        nombrePropiedadMascota = 'FechaNacimiento';
+    } else if (campoId === 'clienteId' || campoId === 'duenio') { // 'duenio' is the id for ClienteId
+        nombrePropiedadMascota = 'ClienteId';
     } else {
-        erroresFormulario[event.target.id] = '';
-        formularioValido.value = true;
+        nombrePropiedadMascota = campoId.charAt(0).toUpperCase() + campoId.slice(1);
     }
-};
 
-const mostrarErroresFormulario = () => {
-    Object.entries(datosMascota).forEach(([campo, valor]) => {
-        if (valor === '' || valor === 0 || !valor) {
-            erroresFormulario[campo] = `El campo es obligatorio.`;
-        }
-    });
-};
+    let errorEncontrado = false;
 
-const limpiarFormulario = () => {
-    datosMascota.nombre = '';
-    datosMascota.especie = '';
-    datosMascota.sexo = '';
-    datosMascota.edad = 0;
-    datosMascota.peso = 0;
-    datosMascota.fechaNacimiento = null;
-    datosMascota.observaciones = '';
-    datosMascota.clienteId = null;
+    // Reiniciar el error específico para este campo
+    erroresFormulario[campoId] = '';
+
+    switch (nombrePropiedadMascota) {
+        case 'Nombre':
+        case 'Especie':
+        case 'Sexo':
+            if (!datosMascota.value[nombrePropiedadMascota] || String(datosMascota.value[nombrePropiedadMascota]).trim() === '') {
+                erroresFormulario[campoId] = `El campo ${campoId} es obligatorio.`;
+                errorEncontrado = true;
+            }
+            break;
+        case 'Edad':
+        case 'Peso':
+            // Asegurarse de que sea un número y mayor a 0
+            if (typeof datosMascota.value[nombrePropiedadMascota] !== 'number' || datosMascota.value[nombrePropiedadMascota] <= 0) {
+                erroresFormulario[campoId] = `El campo ${campoId} debe ser mayor a cero.`;
+                errorEncontrado = true;
+            }
+            break;
+        case 'FechaNacimiento':
+            if (!datosMascota.value[nombrePropiedadMascota]) {
+                erroresFormulario[campoId] = `El campo fecha de nacimiento es obligatorio.`;
+                errorEncontrado = true;
+            }
+            break;
+        case 'ClienteId':
+            if (!datosMascota.value.ClienteId) {
+                erroresFormulario[campoId] = `Debe seleccionar un dueño.`;
+                errorEncontrado = true;
+            }
+            break;
+    }
+
+    if (errorEncontrado) {
+        notificacionesStore.mostrarError('Error de validación', erroresFormulario[campoId]);
+    }
 };
 
 const calcularEdadDesdeFecha = (fechaNacimiento) => {
@@ -119,53 +130,10 @@ const calcularFechaDesdeEdad = (nuevaEdad) => {
     return `${yyyy}-${mm}-${dd}`;
 };
 
-// const registrarMascota = async () => {
-//     return await api.post('mascotas', prepararDatos());
-// };
-
-// const actualizarMascota = async () => {
-//     const datos = prepararDatos();
-//     return await api.put(`mascotas/${datosMascota.clienteId.id}`, datos);
-// };
-
-// const onSubmit = async () => {
-//     try {
-//         if (!formularioValido.value) {
-//             mostrarErroresFormulario();
-//             toast.add({ severity: 'error', summary: 'Error', detail: 'El formulario tiene errores.', life: 3000 });
-//             return;
-//         }
-
-//         setLoading(true);
-
-//         if (props.modoEdicion) {
-//             await actualizarMascota();
-//             toast.add({ severity: 'success', summary: 'Exito', detail: 'Información actualizada.', life: 3000 });
-//             limpiarFormulario();
-//         } else {
-//             const res = await registrarMascota();
-//             actualizarMascotas(res.data);
-//             toast.add({ severity: 'success', summary: 'Exito', detail: 'Mascota registrada.', life: 3000 });
-//             limpiarFormulario();
-//         }
-//     } catch (error) {
-//         setLoading(false);
-//         if (error.response) {
-//             console.error('Error en el servidor:', error);
-//         } else {
-//             console.error('Error en la petición:', error);
-//         }
-//     } finally {
-//         setLoading(false);
-//     }
-// };
-
 const obtenerClientesPorVeterinariaId = async () => {
     const respuesta = await clienteStore.fetchClientesPorVeterinariaId(storeVeterinaria.idVeterinaria);
-    if (respuesta.status == 200 && props.modoEdicion) {
-        const mascota = useMascotaStore.datosMascota;
-        datosMascota.value.ClienteId = clienteStore.clientes.find((x) => x.id === mascota.value.ClienteId);
-    } else if (respuesta?.status === 404) {
+    console.log(respuesta.data);
+    if (respuesta?.status === 404) {
         alert('La mascota no existe en la base de datos');
     } else {
         // console.error('Error de servidor', respuesta);
@@ -173,13 +141,11 @@ const obtenerClientesPorVeterinariaId = async () => {
 };
 
 const mascotaValida = computed(() => {
-    // Verificamos que no haya errores
     const sinErrores = Object.values(erroresFormulario).every((error) => error === '');
 
-    // Verificamos que los campos obligatorios no estén vacíos
-    // const camposLlenos = datosMascota.value.Nombre && datosMascota.value.Sexo && datosMascota.value.Especie && datosMascota.value.FechaNacimiento && datosMascota.value.Edad && datosMascota.value.Peso;
+    const camposLlenos = datosMascota.value.Nombre && datosMascota.value.Especie && datosMascota.value.Sexo && datosMascota.value.Edad && datosMascota.value.Peso && datosMascota.value.fechaNacimiento && datosMascota.value.ClienteId;
 
-    return sinErrores;
+    return camposLlenos && sinErrores;
 });
 
 // 1. Si cambia la fecha de nacimiento -> calculamos edad
@@ -235,11 +201,6 @@ watch(
 
 onMounted(async () => {
     await obtenerClientesPorVeterinariaId();
-
-    if (props.modoEdicion) {
-        Object.assign(datosMascota, useMascotaStore.datosMascota);
-        datosMascota.value.FechaNacimiento = new Date(datosMascota.value.FechaNacimiento).toISOString().split('T')[0];
-    }
 });
 </script>
 <template>
@@ -254,8 +215,9 @@ onMounted(async () => {
                 </div>
                 <div class="flex flex-col gap-2">
                     <label for="sexo" class="font-semibold">Sexo *</label>
-                    <InputText v-model.trim="datosMascota.Sexo" id="sexo" placeholder="Macho" @blur="validarFormulario"
-                        :class="{ 'p-invalid': erroresFormulario.sexo }" />
+                    <Select id="sexo" v-model="datosMascota.Sexo" :options="sexoOptions"
+                        placeholder="Selecciona el sexo" class="w-full" :class="{ 'p-invalid': erroresFormulario.sexo }"
+                        @change="validarFormulario" />
                     <small class="text-red-400" v-if="erroresFormulario.sexo">{{ erroresFormulario.sexo }}</small>
                 </div>
                 <div class="flex flex-col gap-2">
@@ -291,9 +253,23 @@ onMounted(async () => {
                     <label for="duenio" class="font-semibold">Dueño *</label>
                     <Select id="duenio" v-model="datosMascota.ClienteId" :options="clienteStore.clientes"
                         optionLabel="nombre" placeholder="Selecciona al dueño" class="w-full"
-                        :class="{ 'p-invalid': erroresFormulario.clienteId }" />
+                        :class="{ 'p-invalid': erroresFormulario.clienteId }" filter>
+                        <template #value="slotProps">
+                            <div v-if="slotProps.value">
+                                <span>{{ slotProps.value.nombre }}</span>
+                            </div>
+                            <span v-else>
+                                {{ 'Selecciona al dueño' }}
+                            </span>
+                        </template>
+                        <template #option="slotProps">
+                            <div>
+                                <span>{{ slotProps.option.nombre }}</span>
+                            </div>
+                        </template>
+                    </Select>
                     <small class="text-red-400" v-if="erroresFormulario.clienteId">{{ erroresFormulario.clienteId
-                        }}</small>
+                    }}</small>
                 </div>
                 <div class="flex flex-col gap-2">
                     <label for="observaciones" class="font-semibold">Observaciones</label>

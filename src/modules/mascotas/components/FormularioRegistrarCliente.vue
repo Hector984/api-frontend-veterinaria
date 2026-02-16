@@ -3,10 +3,6 @@ import { useClienteStore } from '@/modules/clientes/stores/useClienteStore';
 import { storeToRefs } from 'pinia';
 import { computed, reactive, watch } from 'vue';
 
-const props = defineProps({
-    modoEdicion: Boolean
-});
-
 const clienteStore = useClienteStore();
 const { datosCliente } = storeToRefs(clienteStore);
 
@@ -46,7 +42,7 @@ const clienteValido = computed(() => {
     // Verificamos que los campos obligatorios no estén vacíos
     const camposLlenos = datosCliente.value.Nombre && datosCliente.value.ApellidoPaterno && datosCliente.value.Email && datosCliente.value.Telefono;
 
-    return sinErrores && camposLlenos;
+    return camposLlenos && sinErrores;
 });
 
 watch(

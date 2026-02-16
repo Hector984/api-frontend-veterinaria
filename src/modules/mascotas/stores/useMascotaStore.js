@@ -18,8 +18,6 @@ export const useMascotaStore = defineStore('mascota', () => {
         VeterinariaId: null
     });
 
-    const editarDatosMascota = ref(false);
-
     const prepararDatos = () => {
         const veterinariaStore = useVeterinariaStore();
         const clienteId = datosMascota.value.ClienteId.id;
@@ -39,13 +37,11 @@ export const useMascotaStore = defineStore('mascota', () => {
 
     const fetchDatosMascota = async (id) => {
         const loadingStore = useLoadingStore();
-        editarDatosMascota.value = false;
 
         loadingStore.setLoading(true);
         try {
             const respuesta = await mascotaService.fetchDatosMascota(id);
             datosMascota.value = respuesta;
-            editarDatosMascota.value = true;
 
             return respuesta;
         } catch (error) {
@@ -58,25 +54,10 @@ export const useMascotaStore = defineStore('mascota', () => {
     const registrarMascota = async () => {
         const loadingStore = useLoadingStore();
         try {
-            // if (!formularioValido.value) {
-            //     mostrarErroresFormulario();
-            //     toast.add({ severity: 'error', summary: 'Error', detail: 'El formulario tiene errores.', life: 3000 });
-            //     return;
-            // }
-
             loadingStore.setLoading(true);
 
-            if (editarDatosMascota.value) {
-                await mascotaService.actualizarMascota(datosMascota.value.id, prepararDatos());
-                // toast.add({ severity: 'success', summary: 'Exito', detail: 'Información actualizada.', life: 3000 });
-                // limpiarFormulario();
-            } else {
-                const res = await mascotaService.registrarMascota(prepararDatos());
-                console.log(res.data);
-                // actualizarMascotas(res.data);
-                // toast.add({ severity: 'success', summary: 'Exito', detail: 'Mascota registrada.', life: 3000 });
-                // limpiarFormulario();
-            }
+            const res = await mascotaService.registrarMascota(prepararDatos());
+            return res;
         } catch (error) {
             if (error.response) {
                 console.error('Error en el servidor:', error);
@@ -88,5 +69,20 @@ export const useMascotaStore = defineStore('mascota', () => {
         }
     };
 
-    return { fetchDatosMascota, datosMascota, editarDatosMascota, registrarMascota, seleccionarCliente };
+    const limpiarDatosMascota = () => {
+        datosMascota.value = {
+            id: null,
+            Nombre: '',
+            Especie: '',
+            Sexo: '',
+            Edad: 0,
+            Peso: 0,
+            FechaNacimiento: null,
+            Observaciones: '',
+            ClienteId: null,
+            VeterinariaId: null
+        };
+    };
+
+    return { fetchDatosMascota, datosMascota, registrarMascota, seleccionarCliente, limpiarDatosMascota };
 });

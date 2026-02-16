@@ -2,7 +2,7 @@
 import api from '@/api/axios.js';
 import { useLoadingStore } from '@/stores/useLoadingStore';
 import { storeToRefs } from 'pinia';
-import { useToast } from 'primevue/usetoast';
+import { useNotificacionesStore } from '@/modules/notificaciones/store/useNotificaciones';
 import { reactive, ref } from 'vue';
 
 const store = useLoadingStore();
@@ -23,7 +23,7 @@ const formData = reactive({
     direccion: ''
 });
 
-const toast = useToast();
+const notificacionesStore = useNotificacionesStore();
 const message = ref([]);
 
 const clearFormValues = () => {
@@ -40,13 +40,11 @@ const onSubmit = async () => {
         await api
             .post('veterinarias', formData)
             .then((res) => {
-                console.log(res.data);
-                toast.add({ severity: 'success', summary: 'Exito', detail: 'Veterinaria registrada.', life: 3000 });
+                notificacionesStore.mostrarExito('Éxito', 'Veterinaria registrada.');
                 clearFormValues();
             })
             .catch((err) => {
-                console.log(err);
-                toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo registrar la veterinaria.', life: 3000 });
+                notificacionesStore.mostrarError('Error', 'No se pudo registrar la veterinaria.');
             })
             .finally(() => {
                 setLoading(false);
@@ -67,7 +65,8 @@ const onSubmit = async () => {
             <Message v-for="msg of message" :severity="msg.severity" :key="msg.content">{{ msg.content }}</Message>
         </transition-group>
     </div>
-    <form v-if="!loading && !props.showRegisterVeterinaryForm" class="col-span-12 xl:col-span-6" @submit.prevent="onSubmit">
+    <form v-if="!loading && !props.showRegisterVeterinaryForm" class="col-span-12 xl:col-span-6"
+        @submit.prevent="onSubmit">
         <div class="flex mt-8">
             <div class="card flex flex-col gap-4 w-full">
                 <div class="font-semibold text-xl">Llena los datos para registrar la veterinaria</div>

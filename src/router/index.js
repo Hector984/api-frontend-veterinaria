@@ -25,6 +25,11 @@ const router = createRouter({
                     component: () => import('@/modules/veterinaria/views/DashboardVeterinaria.vue')
                 },
                 {
+                    path: '/mascotas/:id',
+                    name: 'editar-mascota',
+                    component: () => import('@/modules/mascotas/views/Mascota.vue')
+                },
+                {
                     path: '/uikit/formlayout',
                     name: 'formlayout',
                     component: () => import('@/views/uikit/FormLayout.vue')
