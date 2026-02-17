@@ -3,6 +3,7 @@ import { useLoadingStore } from '@/stores/useLoadingStore.js';
 import { defineStore } from 'pinia';
 import { ref, toRaw } from 'vue';
 import * as mascotaService from '../services/mascotaService.js';
+import { useClienteStore } from '@/modules/clientes/stores/useClienteStore.js';
 
 export const useMascotaStore = defineStore('mascota', () => {
     const datosMascota = ref({
@@ -35,13 +36,30 @@ export const useMascotaStore = defineStore('mascota', () => {
         datosMascota.value.ClienteId = cliente;
     };
 
+    const setDatosMascota = (datos) => {
+        const veterinariaStore = useVeterinariaStore();
+        const veterinariaId = veterinariaStore.idVeterinaria;
+
+        datosMascota.value.id = datos.id;
+        datosMascota.value.Nombre = datos.nombre;
+        datosMascota.value.Especie = datos.especie;
+        datosMascota.value.Sexo = datos.sexo;
+        datosMascota.value.Edad = datos.edad;
+        datosMascota.value.Peso = datos.peso;
+        datosMascota.value.FechaNacimiento = new Date(datos.fechaNacimiento);
+        datosMascota.value.ClienteId = datos.clienteId;
+        datosMascota.value.VeterinariaId = veterinariaId;
+    };
+
     const fetchDatosMascota = async (id) => {
         const loadingStore = useLoadingStore();
+        const clienteStore = useClienteStore();
 
         loadingStore.setLoading(true);
         try {
             const respuesta = await mascotaService.fetchDatosMascota(id);
-            datosMascota.value = respuesta;
+            setDatosMascota(respuesta.data);
+            clienteStore.setDatosClienteDesdeMascota(respuesta.data);
 
             return respuesta;
         } catch (error) {
@@ -84,5 +102,5 @@ export const useMascotaStore = defineStore('mascota', () => {
         };
     };
 
-    return { fetchDatosMascota, datosMascota, registrarMascota, seleccionarCliente, limpiarDatosMascota };
+    return { fetchDatosMascota, datosMascota, registrarMascota, seleccionarCliente, limpiarDatosMascota, setDatosMascota };
 });

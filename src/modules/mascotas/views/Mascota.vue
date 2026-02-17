@@ -1,37 +1,30 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { useMascotaStore } from '../stores/useMascotaStore';
+import { useClienteStore } from '@/modules/clientes/stores/useClienteStore';
 
 const route = useRoute();
 
-// Mock data - Replace with API calls later
-const mascota = ref(null);
-const cliente = ref(null);
+const mascotaStore = useMascotaStore();
+const clienteStore = useClienteStore();
 const historialMedico = ref([]);
+const activeTab = ref('0');
+const editando = ref(false);
 
-const fetchDatos = () => {
-    // Simulate fetching data based on route id
+const habilitarEdicion = () => {
+    editando.value = true;
+};
+
+const finalizarEdicion = () => {
+    editando.value = false;
+};
+
+const fetchDatos = async () => {
     const mascotaId = route.params.id;
-    console.log('Fetching data for pet ID:', mascotaId);
 
-    mascota.value = {
-        id: mascotaId,
-        nombre: 'Max',
-        especie: 'Perro',
-        raza: 'Golden Retriever',
-        sexo: 'Macho',
-        edad: '5 años',
-        peso: '30 kg',
-        fotoUrl: 'https://www.primefaces.org/primevue/demo/images/galleria/galleria10.jpg' // Placeholder image
-    };
-
-    cliente.value = {
-        id: 101,
-        nombre: 'Carlos Santana',
-        telefono: '555-123-4567',
-        email: 'carlos.s@example.com',
-        direccion: 'Av. Siempre Viva 742'
-    };
+    const respuesta = await mascotaStore.fetchDatosMascota(mascotaId);
+    console.log('Fetching data for pet ID:', respuesta.data);
 
     historialMedico.value = [
         {
@@ -61,21 +54,22 @@ const fetchDatos = () => {
     ];
 };
 
-onMounted(() => {
-    fetchDatos();
+onMounted(async () => {
+    mascotaStore.limpiarDatosMascota();
+    await fetchDatos();
 });
 </script>
 
 <template>
     <div class="grid">
         <div class="col-12">
-            <Card v-if="mascota">
+            <Card v-if="mascotaStore.datosMascota">
                 <template #title>
                     <div class="flex items-center gap-4">
-                        <Avatar :image="mascota.fotoUrl" size="xlarge" shape="circle" />
+                        <!-- <Avatar :image="mascota.fotoUrl" size="xlarge" shape="circle" /> -->
                         <div>
-                            <h2 class="font-bold text-3xl mb-0">{{ mascota.nombre }}</h2>
-                            <p class="text-gray-500 text-lg mt-0">{{ mascota.especie }} - {{ mascota.raza }}</p>
+                            <h2 class="font-bold text-3xl mb-0">{{ mascotaStore.datosMascota.nombre }}</h2>
+                            <p class="text-gray-500 text-lg mt-0">{{ mascotaStore.datosMascota.Especie }}</p>
                         </div>
                     </div>
                 </template>
@@ -83,34 +77,34 @@ onMounted(() => {
                     <div class="flex justify-around">
                         <div class="text-center">
                             <p class="font-semibold text-lg">Sexo</p>
-                            <p>{{ mascota.sexo }}</p>
+                            <p>{{ mascotaStore.datosMascota.sexo }}</p>
                         </div>
                         <div class="text-center">
                             <p class="font-semibold text-lg">Edad</p>
-                            <p>{{ mascota.edad }}</p>
+                            <p>{{ mascotaStore.datosMascota.edad }} años</p>
                         </div>
                         <div class="text-center">
                             <p class="font-semibold text-lg">Peso</p>
-                            <p>{{ mascota.peso }}</p>
+                            <p>{{ mascotaStore.datosMascota.peso }} Kg</p>
                         </div>
                     </div>
                 </template>
             </Card>
         </div>
 
-        <div class="col-12">
-            <Tabs value="0">
+        <div class="col-12 mt-5">
+            <Tabs v-model:value="activeTab">
                 <TabList>
                     <Tab value="0">
                         <div class="flex align-items-center gap-2">
-                            <i class="pi pi-user" style="font-size: 1.2rem"></i>
-                            <span class="font-bold white-space-nowrap">Información del Dueño</span>
+                            <i class="pi pi-heart" style="font-size: 1.2rem"></i>
+                            <span class="font-bold white-space-nowrap">Información de la Mascota</span>
                         </div>
                     </Tab>
                     <Tab value="1">
                         <div class="flex align-items-center gap-2">
-                            <i class="pi pi-heart" style="font-size: 1.2rem"></i>
-                            <span class="font-bold white-space-nowrap">Información de la Mascota</span>
+                            <i class="pi pi-user" style="font-size: 1.2rem"></i>
+                            <span class="font-bold white-space-nowrap">Información del Dueño</span>
                         </div>
                     </Tab>
                     <Tab value="2">
@@ -123,27 +117,38 @@ onMounted(() => {
                 <TabPanels>
                     <TabPanel value="0">
                         <div class="p-4">
-                            <Fluid v-if="cliente">
+                            <Fluid v-if="mascotaStore.datosMascota">
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="field col-12 md:col-6">
-                                        <label for="nombreCliente" class="font-semibold">Nombre</label>
-                                        <InputText id="nombreCliente" v-model="cliente.nombre" />
+                                        <label for="nombreMascota" class="font-semibold">Nombre</label>
+                                        <InputText id="nombreMascota" v-model="mascotaStore.datosMascota.Nombre"
+                                            :disabled="!editando" />
                                     </div>
                                     <div class="field col-12 md:col-6">
-                                        <label for="nombreCliente" class="font-semibold">A. Paterno</label>
-                                        <InputText id="nombreCliente" v-model="cliente.nombre" />
+                                        <label for="especieMascota" class="font-semibold">Especie</label>
+                                        <InputText id="especieMascota" v-model="mascotaStore.datosMascota.Especie"
+                                            :disabled="!editando" />
                                     </div>
                                     <div class="field col-12 md:col-6">
-                                        <label for="nombreCliente" class="font-semibold">A. Materno</label>
-                                        <InputText id="nombreCliente" v-model="cliente.nombre" />
+                                        <label for="edadMascota" class="font-semibold">Edad</label>
+                                        <InputNumber id="edadMascota" v-model="mascotaStore.datosMascota.Edad"
+                                            inputId="minmax" :min="0" :max="50" fluid :disabled="!editando"
+                                            suffix="años" />
                                     </div>
                                     <div class="field col-12 md:col-6">
-                                        <label for="telefonoCliente" class="font-semibold">Teléfono</label>
-                                        <InputText id="telefonoCliente" v-model="cliente.telefono" />
+                                        <label for="edadMascota" class="font-semibold">Fecha de nacimiento</label>
+                                        <DatePicker dateFormat="dd/mm/yy" v-model="mascotaStore.datosMascota.FechaNacimiento" showIcon fluid iconDisplay="input" :disabled="!editando" />
                                     </div>
                                     <div class="field col-12 md:col-6">
-                                        <label for="emailCliente" class="font-semibold">Email</label>
-                                        <InputText id="emailCliente" v-model="cliente.email" />
+                                        <label for="sexoMascota" class="font-semibold">Sexo</label>
+                                        <InputText id="sexoMascota" v-model="mascotaStore.datosMascota.Sexo"
+                                            :disabled="!editando" />
+                                    </div>
+                                    <div class="field col-12 md:col-6">
+                                        <label for="pesoMascota" class="font-semibold">Peso</label>
+                                        <InputNumber id="pesoMascota" v-model="mascotaStore.datosMascota.Peso"
+                                            inputId="minmax" :min="0" :max="50" fluid :disabled="!editando"
+                                            suffix="Kg" />
                                     </div>
                                 </div>
                             </Fluid>
@@ -151,32 +156,31 @@ onMounted(() => {
                     </TabPanel>
                     <TabPanel value="1">
                         <div class="p-4">
-                            <div v-if="mascota" class="p-fluid formgrid grid">
-                                <div class="field col-12 md:col-6">
-                                    <label for="nombreMascota" class="font-semibold">Nombre</label>
-                                    <InputText id="nombreMascota" v-model="mascota.nombre" />
+                            <Fluid v-if="clienteStore.datosCliente">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="field col-12 md:col-6">
+                                        <label for="nombreCliente" class="font-semibold">Nombre</label>
+                                        <InputText id="nombreCliente" v-model="clienteStore.datosCliente.Nombre" :disabled="!editando" />
+                                    </div>
+                                    <div class="field col-12 md:col-6">
+                                        <label for="nombreCliente" class="font-semibold">A. Paterno</label>
+                                        <InputText id="nombreCliente" v-model="clienteStore.datosCliente.ApellidoPaterno" :disabled="!editando" />
+                                    </div>
+                                    <div class="field col-12 md:col-6">
+                                        <label for="nombreCliente" class="font-semibold">A. Materno</label>
+                                        <InputText id="nombreCliente" v-model="clienteStore.datosCliente.ApellidoMaterno" :disabled="!editando" />
+                                    </div>
+                                    <div class="field col-12 md:col-6">
+                                        <label for="telefonoCliente" class="font-semibold">Teléfono</label>
+                                        <InputText id="telefonoCliente" v-model="clienteStore.datosCliente.Telefono"
+                                            :disabled="!editando" />
+                                    </div>
+                                    <div class="field col-12 md:col-6">
+                                        <label for="emailCliente" class="font-semibold">Email</label>
+                                        <InputText id="emailCliente" v-model="clienteStore.datosCliente.Email" :disabled="!editando" />
+                                    </div>
                                 </div>
-                                <div class="field col-12 md:col-6">
-                                    <label for="especieMascota" class="font-semibold">Especie</label>
-                                    <InputText id="especieMascota" v-model="mascota.especie" />
-                                </div>
-                                <div class="field col-12 md:col-6">
-                                    <label for="razaMascota" class="font-semibold">Raza</label>
-                                    <InputText id="razaMascota" v-model="mascota.raza" />
-                                </div>
-                                <div class="field col-12 md:col-6">
-                                    <label for="sexoMascota" class="font-semibold">Sexo</label>
-                                    <InputText id="sexoMascota" v-model="mascota.sexo" />
-                                </div>
-                                <div class="field col-12 md:col-6">
-                                    <label for="edadMascota" class="font-semibold">Edad</label>
-                                    <InputText id="edadMascota" v-model="mascota.edad" />
-                                </div>
-                                <div class="field col-12 md:col-6">
-                                    <label for="pesoMascota" class="font-semibold">Peso</label>
-                                    <InputText id="pesoMascota" v-model="mascota.peso" />
-                                </div>
-                            </div>
+                            </Fluid>
                         </div>
                     </TabPanel>
                     <TabPanel value="2">
@@ -190,8 +194,7 @@ onMounted(() => {
                                 <template #content="slotProps">
                                     <Card>
                                         <template #title>{{ slotProps.item.titulo }}</template>
-                                        <template #subtitle>
-                                            {{ slotProps.item.fecha }} - {{ slotProps.item.doctor }}
+                                        <template #subtitle> {{ slotProps.item.fecha }} - {{ slotProps.item.doctor }}
                                         </template>
                                         <template #content>
                                             <p>{{ slotProps.item.descripcion }}</p>
@@ -204,9 +207,13 @@ onMounted(() => {
                 </TabPanels>
             </Tabs>
         </div>
-        <div class="col-12 flex justify-end gap-2 mt-4">
-            <Button label="Cancelar" severity="secondary" icon="pi pi-times" />
-            <Button label="Guardar Cambios" icon="pi pi-check" />
+        <div class="col-12 flex justify-end gap-2 mt-4" v-if="activeTab === '0' || activeTab === '1'">
+            <template v-if="editando">
+                <Button label="Cancelar" severity="secondary" icon="pi pi-times" @click="finalizarEdicion" />
+                <Button label="Guardar Cambios" icon="pi pi-check" @click="finalizarEdicion" />
+            </template>
+
+            <Button v-else label="Editar información" icon="pi pi-pencil" @click="habilitarEdicion" />
         </div>
     </div>
 </template>

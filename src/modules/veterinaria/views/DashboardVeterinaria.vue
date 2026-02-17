@@ -1,28 +1,14 @@
 <script setup>
-import { useMascotaStore } from '@/modules/mascotas/stores/useMascotaStore';
-import { onMounted, ref } from 'vue';
 import FormularioDosPasos from '@/modules/mascotas/components/FormularioDosPasos.vue';
+import { onMounted, ref } from 'vue';
 import FormularioRegistrarVeterinaria from '../components/FormularioRegistrarVeterinaria.vue';
 import TablaPacientesVeterinaria from '../components/TablaPacientesVeterinaria.vue';
 import VeterinariaInfoCard from '../components/VeterinariaInfoCard.vue';
 import { useVeterinariaStore } from '../stores/useVeterinariaStore';
 
 const veterinariaStore = useVeterinariaStore();
-const mascotaStore = useMascotaStore();
 
 const mostarFormularioDosPasos = ref(false);
-
-const obtenerDatosMascota = async (datos) => {
-    const respuesta = await mascotaStore.fetchDatosMascota(datos.id);
-
-    if (respuesta?.status === 200) {
-        abrirFormularioMascota();
-    } else if (respuesta?.status === 404) {
-        alert('La mascota no existe en la base de datos');
-    } else {
-        console.error('Error de servidor', respuesta);
-    }
-};
 
 function abrirFormularioMascota() {
     mostarFormularioDosPasos.value = true;
@@ -54,7 +40,6 @@ onMounted(async () => {
         <FormularioDosPasos v-if="mostarFormularioDosPasos" v-model:visible="mostarFormularioDosPasos"
             @cerrar-formulario="cerrarFormulario" />
 
-        <TablaPacientesVeterinaria v-if="veterinariaStore.mascotas" :mascotas="veterinariaStore.mascotas"
-            @editar-mascota="obtenerDatosMascota" />
+        <TablaPacientesVeterinaria v-if="veterinariaStore.mascotas" :mascotas="veterinariaStore.mascotas" />
     </Fluid>
 </template>

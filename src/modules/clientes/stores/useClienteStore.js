@@ -16,6 +16,18 @@ export const useClienteStore = defineStore('clientes', () => {
         VeterinariaId: null
     });
 
+    const setDatosClienteDesdeMascota = (datos) => {
+        const veterinariaStore = useVeterinariaStore();
+        const veterinariaId = veterinariaStore.idVeterinaria;
+
+        datosCliente.value.Nombre = datos.nombreCliente;
+        datosCliente.value.ApellidoPaterno = datos.apellidoPaternoCliente;
+        datosCliente.value.ApellidoMaterno = datos.apellidoMaternoCliente;
+        datosCliente.value.Email = datos.emailCliente;
+        datosCliente.value.Telefono = datos.telefonoCliente;
+        datosCliente.value.VeterinariaId = veterinariaId;
+    }
+
     const fetchClientesPorVeterinariaId = async (id) => {
         const loadingStore = useLoadingStore();
         try {
@@ -55,5 +67,5 @@ export const useClienteStore = defineStore('clientes', () => {
         }
     };
 
-    return { fetchClientesPorVeterinariaId, registrarCliente, datosCliente, clientes };
+    return { fetchClientesPorVeterinariaId, registrarCliente, setDatosClienteDesdeMascota, datosCliente, clientes };
 });

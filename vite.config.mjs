@@ -1,19 +1,33 @@
 import { fileURLToPath, URL } from 'node:url';
-
 import { PrimeVueResolver } from '@primevue/auto-import-resolver';
 import vue from '@vitejs/plugin-vue';
 import Components from 'unplugin-vue-components/vite';
 import { defineConfig } from 'vite';
 
-// https://vitejs.dev/config/
 export default defineConfig({
     optimizeDeps: {
-        noDiscovery: true
+        // CORRECCIÓN: Nombre de propiedad correcto
+        include: [
+            'primevue/config',
+            'primevue/tabs',
+            'primevue/tabpanel',
+            'primevue/tablist',
+            'primevue/tabpanels', // Añadido
+            'primevue/card',
+            'primevue/inputtext',
+            'primevue/timeline',
+            'primevue/avatar',    // Añadido (lo usas en tu código)
+            'primevue/button'     // Añadido
+        ]
     },
     plugins: [
         vue(),
         Components({
-            resolvers: [PrimeVueResolver()]
+            resolvers: [
+                PrimeVueResolver({
+                    importStyle: false
+                })
+            ]
         })
     ],
     resolve: {
