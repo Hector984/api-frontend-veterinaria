@@ -40,7 +40,8 @@ const registrarCliente = async () => {
     if (formularioClienteValido.value) {
         try {
             const respuesta = await clienteStore.registrarCliente();
-            if (respuesta && respuesta.status == 200) {
+            console.log(respuesta);
+            if (respuesta && respuesta.status == 201) {
                 notificacionesStore.mostrarExito('Éxito', 'Cliente registrado.');
                 mascotaStore.seleccionarCliente(respuesta.data);
                 activeStep.value = 2;
@@ -105,8 +106,7 @@ const cerrarFormulario = () => {
                     <StepPanel :value="1">
                         <div class="flex flex-col gap-4 w-full" style="min-height: 16rem">
                             <div class="text-center mt-4 mb-2 text-xl font-semibold">Datos del dueño</div>
-                            <FormularioRegistrarCliente
-                                @cliente-valido="formularioClienteValido = $event" />
+                            <FormularioRegistrarCliente @cliente-valido="formularioClienteValido = $event" />
                         </div>
                     </StepPanel>
 
@@ -121,8 +121,8 @@ const cerrarFormulario = () => {
 
                 <div class="flex justify-end gap-3 mt-4">
                     <Button label="Cancelar" icon="pi pi-times" severity="secondary" @click="cerrarFormulario" />
-                    <Button v-if="activeStep === 1" label="¿Ya estas registrado?"
-                        severity="secondary" @click="habilitarRegistroMascota" />
+                    <Button v-if="activeStep === 1" label="¿Ya estas registrado?" severity="secondary"
+                        @click="habilitarRegistroMascota" />
 
                     <Button v-if="activeStep === 1" type="button" label="Siguiente: Datos Mascota"
                         icon="pi pi-arrow-right" iconPos="right" :disabled="!formularioClienteValido"

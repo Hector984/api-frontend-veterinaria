@@ -2,9 +2,9 @@
 import { useClienteStore } from '@/modules/clientes/stores/useClienteStore';
 import { useMascotaStore } from '@/modules/mascotas/stores/useMascotaStore';
 import { useNotificacionesStore } from '@/modules/notificaciones/store/useNotificaciones';
+import { useVeterinariaStore } from '@/modules/veterinaria/stores/useVeterinariaStore';
 import { storeToRefs } from 'pinia';
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
-import { useVeterinariaStore } from '@/modules/veterinaria/stores/useVeterinariaStore';
 
 const emits = defineEmits(['formulario-mascota-valido']);
 
@@ -33,13 +33,13 @@ const erroresFormulario = reactive({
 const sexoOptions = ref(['Macho', 'Hembra']);
 
 const validarFormulario = (event) => {
-    const campoId = event.target.id;
+    const campoId = event.target?.id || event.originalEvent?.target?.id;
     let nombrePropiedadMascota;
 
     // Mapeo de IDs de input a nombres de propiedad en datosMascota (camelCase a PascalCase si es necesario)
     if (campoId === 'fechaNacimiento') {
         nombrePropiedadMascota = 'FechaNacimiento';
-    } else if (campoId === 'clienteId' || campoId === 'duenio') { // 'duenio' is the id for ClienteId
+    } else if (campoId === 'clienteId' || campoId === 'duenio') {
         nombrePropiedadMascota = 'ClienteId';
     } else {
         nombrePropiedadMascota = campoId.charAt(0).toUpperCase() + campoId.slice(1);
@@ -132,7 +132,6 @@ const calcularFechaDesdeEdad = (nuevaEdad) => {
 
 const obtenerClientesPorVeterinariaId = async () => {
     const respuesta = await clienteStore.fetchClientesPorVeterinariaId(storeVeterinaria.idVeterinaria);
-    console.log(respuesta.data);
     if (respuesta?.status === 404) {
         alert('La mascota no existe en la base de datos');
     } else {
@@ -269,7 +268,7 @@ onMounted(async () => {
                         </template>
                     </Select>
                     <small class="text-red-400" v-if="erroresFormulario.clienteId">{{ erroresFormulario.clienteId
-                    }}</small>
+                        }}</small>
                 </div>
                 <div class="flex flex-col gap-2">
                     <label for="observaciones" class="font-semibold">Observaciones</label>
