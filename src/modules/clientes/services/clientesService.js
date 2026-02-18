@@ -10,5 +10,5 @@ export const registrarCliente = async (datos) => {
 };
 
 export const actualizarCliente = async (id, datos) => {
-    return await api.put(`mascotas/${id}`, datos);
+    return await api.put(`clientes/${id}`, datos);
 };

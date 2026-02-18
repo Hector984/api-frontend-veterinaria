@@ -8,6 +8,7 @@ export const useClienteStore = defineStore('clientes', () => {
     const clientes = reactive([]);
 
     const datosCliente = ref({
+        Id: '',
         Nombre: '',
         ApellidoPaterno: '',
         ApellidoMaterno: '',
@@ -20,13 +21,25 @@ export const useClienteStore = defineStore('clientes', () => {
         const veterinariaStore = useVeterinariaStore();
         const veterinariaId = veterinariaStore.idVeterinaria;
 
+        datosCliente.value.Id = datos.clienteId;
         datosCliente.value.Nombre = datos.nombreCliente;
         datosCliente.value.ApellidoPaterno = datos.apellidoPaternoCliente;
         datosCliente.value.ApellidoMaterno = datos.apellidoMaternoCliente;
         datosCliente.value.Email = datos.emailCliente;
         datosCliente.value.Telefono = datos.telefonoCliente;
         datosCliente.value.VeterinariaId = veterinariaId;
-    }
+    };
+
+    const datosClienteDTO = () => {
+        return {
+            Nombre: datosCliente.value.Nombre,
+            ApellidoPaterno: datosCliente.value.ApellidoPaterno,
+            ApellidoMaterno: datosCliente.value.ApellidoMaterno,
+            Email: datosCliente.value.Email,
+            Telefono: datosCliente.value.Telefono,
+            VeterinariaId: datosCliente.value.VeterinariaId
+        };
+    };
 
     const fetchClientesPorVeterinariaId = async (id) => {
         const loadingStore = useLoadingStore();
@@ -67,5 +80,15 @@ export const useClienteStore = defineStore('clientes', () => {
         }
     };
 
-    return { fetchClientesPorVeterinariaId, registrarCliente, setDatosClienteDesdeMascota, datosCliente, clientes };
+    const actualizarCliente = async () => {
+        const id = datosCliente.value.Id;
+
+        try {
+            await clientesService.actualizarCliente(id, datosClienteDTO());
+        } catch (error) {
+            return error.response;
+        }
+    };
+
+    return { fetchClientesPorVeterinariaId, registrarCliente, setDatosClienteDesdeMascota, actualizarCliente, datosCliente, clientes };
 });

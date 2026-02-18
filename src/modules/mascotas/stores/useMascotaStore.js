@@ -1,9 +1,9 @@
+import { useClienteStore } from '@/modules/clientes/stores/useClienteStore.js';
 import { useVeterinariaStore } from '@/modules/veterinaria/stores/useVeterinariaStore.js';
 import { useLoadingStore } from '@/stores/useLoadingStore.js';
 import { defineStore } from 'pinia';
 import { ref, toRaw } from 'vue';
 import * as mascotaService from '../services/mascotaService.js';
-import { useClienteStore } from '@/modules/clientes/stores/useClienteStore.js';
 
 export const useMascotaStore = defineStore('mascota', () => {
     const datosMascota = ref({
@@ -28,6 +28,17 @@ export const useMascotaStore = defineStore('mascota', () => {
             ...datosBase,
             VeterinariaId: veterinariaStore.idVeterinaria,
             ClienteId: parseInt(clienteId)
+        };
+    };
+
+    const datosActualizarMascotaDTO = () => {
+        return {
+            Nombre: datosMascota.value.Nombre,
+            Sexo: datosMascota.value.Sexo,
+            Especie: datosMascota.value.Especie,
+            Peso: datosMascota.value.Peso,
+            FechaNacimiento: datosMascota.value.FechaNacimiento,
+            VeterinariaId: datosMascota.value.VeterinariaId
         };
     };
 
@@ -69,6 +80,16 @@ export const useMascotaStore = defineStore('mascota', () => {
         }
     };
 
+    const actualizarDatosMascota = async () => {
+        const id = datosMascota.value.id;
+
+        try {
+            await mascotaService.actualizarMascota(id, datosActualizarMascotaDTO());
+        } catch (error) {
+            return error.response;
+        }
+    };
+
     const registrarMascota = async () => {
         const loadingStore = useLoadingStore();
         try {
@@ -102,5 +123,5 @@ export const useMascotaStore = defineStore('mascota', () => {
         };
     };
 
-    return { fetchDatosMascota, datosMascota, registrarMascota, seleccionarCliente, limpiarDatosMascota, setDatosMascota };
+    return { fetchDatosMascota, actualizarDatosMascota, datosMascota, registrarMascota, seleccionarCliente, limpiarDatosMascota, setDatosMascota };
 });
