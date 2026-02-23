@@ -28,6 +28,11 @@ const router = createRouter({
                     path: '/mascotas/:id',
                     name: 'editar-mascota',
                     component: () => import('@/modules/mascotas/views/Mascota.vue')
+                },
+                {
+                    path: '/mascotas/:id/nueva-consulta',
+                    name: 'nueva-consulta',
+                    component: () => import('@/modules/consultas/views/RegistrarConsulta.vue')
                 }
             ]
         },

@@ -38,6 +38,10 @@ const editarMascota = (mascota) => {
     router.push({ name: 'editar-mascota', params: { id: mascota.id } });
 };
 
+const nuevaConsulta = (mascota) => {
+    router.push({ name: 'nueva-consulta', params: { id: mascota.id } });
+};
+
 onBeforeMount(() => {
     initFilters();
 });
@@ -106,6 +110,7 @@ onBeforeMount(() => {
         <Column header="Acciones" bodyClass="text-center" style="min-width: 8rem">
             <template #body="slotProps">
                 <div class="flex gap-2 justify-center" v-if="slotProps.data.activo">
+                    <Button icon="pi pi-plus" severity="primary" rounded @click="nuevaConsulta(slotProps.data)" />
                     <Button icon="pi pi-pencil" severity="secondary" rounded @click="editarMascota(slotProps.data)" />
                     <Button icon="pi pi-trash" severity="danger" rounded @click="confirmarEliminar(slotProps.data)" />
                 </div>

@@ -90,3 +90,31 @@ Almacenes de estado globales (usando Pinia) que no pertenecen a un módulo espec
 
 #### `src/views/`
 Contiene las vistas principales o páginas de la aplicación que no forman parte de un módulo de negocio específico, como el `Dashboard.vue` general, `Landing.vue` y las páginas de autenticación. Se excluye el directorio `uikit` que contiene componentes de demostración.
+
+#### 📌 Decisión Técnica: Manejo de Moneda y Costos
+
+Contexto
+Para el modulo de Consultas, se requiere almacenar el costo de los servicios médicos. Se ha optado por un enfoque de integridad financiera sobre la representación visual directa en la base de datos.
+
+Implementación Final
+Base de Datos (Postgres): El campo Costo se almacena como un tipo integer.
+
+Lógica de Almacenamiento: Se utiliza la unidad mínima de la moneda (centavos).
+
+Ejemplo: Un costo de $10.50 se almacena como 1050.
+
+Entidad C# (Consulta.cs): Mantiene la propiedad como int para asegurar que todas las operaciones en la capa de datos sean atómicas y libres de errores de redondeo de punto flotante.
+
+Capa de Presentación (DTOs): La conversión a moneda real (decimal) se realiza exclusivamente en los DTOs o mediante el mapeo de AutoMapper.
+
+Justificación (Rationale)
+Precisión Absoluta: El uso de integer elimina los errores de redondeo comunes en los tipos float o double y es más eficiente que numeric para cálculos masivos.
+
+Simplicidad de Arquitectura: Dado que el campo tiene un uso limitado (reportes de ganancias), se decidió no implementar Value Converters en el DbContext para mantener la transparencia total entre la clase C# y la tabla de Postgres.
+
+Rendimiento: Las sumatorias para reportes mensuales de ganancias se realizan directamente sobre enteros en el servidor de base de datos.
+
+Reglas de Mapeo
+Hacia el Cliente (Read): decimal Moneda = costoEntero / 100m;
+
+Hacia la Base de Datos (Write): int costoEntero = (int)Math.Round(decimalMoneda * 100, MidpointRounding.AwayFromZero);
