@@ -11,6 +11,14 @@ const model = ref([
             { label: 'Veterinarias', icon: 'pi pi-fw pi-home', to: '/veterinarias' },
             { label: 'Mi Veterinaria', icon: 'pi pi-fw pi-home', to: '/mi-veterinaria' }
         ]
+    },
+    {
+        label: 'Configuración',
+        items: [{ label: 'Receta', icon: 'pi pi-fw pi-home', to: '/configuracion/receta' }]
+    },
+    {
+        label: 'Cuenta',
+        items: [{ label: 'Perfil', icon: 'pi pi-fw pi-home', to: '/perfil' }]
     }
 ]);
 </script>

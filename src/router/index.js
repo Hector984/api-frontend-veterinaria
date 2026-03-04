@@ -33,6 +33,11 @@ const router = createRouter({
                     path: '/mascotas/:id/nueva-consulta',
                     name: 'nueva-consulta',
                     component: () => import('@/modules/consultas/views/RegistrarConsulta.vue')
+                },
+                {
+                    path: '/configuracion/receta',
+                    name: 'configurar-receta',
+                    component: () => import('@/modules/receta/views/Receta.vue')
                 }
             ]
         },

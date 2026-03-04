@@ -47,6 +47,21 @@ export const useConsultaStore = defineStore('consulta', () => {
         }
     };
 
+    const generarReceta = async (consultaId) => {
+        const loadingStore = useLoadingStore();
+        loadingStore.setLoading(true);
+        try {
+            const blob = await consultasService.generarReceta(consultaId);
+            return blob;
+        } catch (err) {
+            error.value = 'Error al generar la receta médica';
+            console.error('Error generating prescription:', err);
+            throw err;
+        } finally {
+            loadingStore.setLoading(false);
+        }
+    };
+
     const resetConsulta = () => {
         consulta.value = {
             mascotaId: null,
@@ -64,6 +79,7 @@ export const useConsultaStore = defineStore('consulta', () => {
         consulta,
         error,
         registrarNuevaConsulta,
+        generarReceta,
         resetConsulta
     };
 });
