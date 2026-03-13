@@ -2,7 +2,7 @@
 import { useClienteStore } from '@/modules/clientes/stores/useClienteStore';
 import { useLoadingStore } from '@/stores/useLoadingStore';
 import { useToast } from 'primevue/usetoast';
-import { onMounted, ref, watch, nextTick } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useMascotaStore } from '../stores/useMascotaStore';
 
@@ -12,7 +12,6 @@ const toast = useToast();
 const mascotaStore = useMascotaStore();
 const clienteStore = useClienteStore();
 const loadingStore = useLoadingStore();
-const historialMedico = ref([]);
 const activeTab = ref('0');
 const editando = ref(false);
 const informacionClienteEditada = ref(false);
@@ -84,33 +83,6 @@ const fetchDatos = async () => {
     const mascotaId = route.params.id;
 
     await mascotaStore.fetchDatosMascota(mascotaId);
-
-    historialMedico.value = [
-        {
-            fecha: '15/01/2024',
-            titulo: 'Vacunación Anual',
-            descripcion: 'Se administró la vacuna polivalente y antirrábica.',
-            doctor: 'Dr. House',
-            icon: 'pi pi-check-circle',
-            color: '#60A5FA'
-        },
-        {
-            fecha: '20/03/2024',
-            titulo: 'Consulta por cojera',
-            descripcion: 'Leve esguince en la pata delantera derecha. Se recetó reposo y antiinflamatorios.',
-            doctor: 'Dr. Strange',
-            icon: 'pi pi-plus-circle',
-            color: '#FBBF24'
-        },
-        {
-            fecha: '05/06/2024',
-            titulo: 'Control de peso',
-            descripcion: 'El peso se mantiene estable. Dieta adecuada.',
-            doctor: 'Dr. Dolittle',
-            icon: 'pi pi-chart-line',
-            color: '#34D399'
-        }
-    ];
 };
 
 watch(
@@ -182,32 +154,37 @@ onMounted(async () => {
         <div class="col-12">
             <Card v-if="mascotaStore.datosMascota">
                 <template #title>
-                    <div class="flex items-center gap-4">
-                        <!-- <Avatar :image="mascota.fotoUrl" size="xlarge" shape="circle" /> -->
-                        <div>
-                            <h2 class="font-bold text-3xl mb-0">Nombre del paciente: {{ mascotaStore.datosMascota.Nombre
-                                }}</h2>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <Button icon="pi pi-arrow-left" severity="secondary" text rounded @click="router.back()" />
+                            <h2 class="font-bold text-3xl mb-0">Nueva Consulta: {{ mascotaStore.datosMascota.Nombre }}
+                            </h2>
                         </div>
                     </div>
                 </template>
                 <template #content>
-                    <div class="flex justify-around">
+                    <div class="flex justify-around items-center">
                         <div class="text-center">
-                            <p class="font-semibold text-lg">Especie</p>
-                            <p>{{ mascotaStore.datosMascota.Especie }}</p>
+                            <p class="font-semibold text-lg text-muted-color mb-1">Especie / Raza</p>
+                            <p class="text-xl font-bold">{{ mascotaStore.datosMascota.Especie }} / {{ 'Mestizo' }}</p>
                         </div>
                         <div class="text-center">
-                            <p class="font-semibold text-lg">Sexo</p>
-                            <p>{{ mascotaStore.datosMascota.Sexo }}</p>
+                            <p class="font-semibold text-lg text-muted-color mb-1">Sexo</p>
+                            <p class="text-xl font-bold">{{ mascotaStore.datosMascota.Sexo }}</p>
                         </div>
                         <div class="text-center">
-                            <p class="font-semibold text-lg">Edad</p>
-                            <p>{{ mascotaStore.datosMascota.Edad }} años</p>
+                            <p class="font-semibold text-lg text-muted-color mb-1">Edad</p>
+                            <p class="text-xl font-bold">{{ mascotaStore.datosMascota.Edad }} años</p>
                         </div>
                         <div class="text-center">
-                            <p class="font-semibold text-lg">Peso</p>
-                            <p>{{ mascotaStore.datosMascota.Peso }} Kg</p>
+                            <p class="font-semibold text-lg text-muted-color mb-1">Peso Actual</p>
+                            <p class="text-xl font-bold">{{ mascotaStore.datosMascota.Peso }} Kg</p>
                         </div>
+                        <!-- <div class="text-center">
+                            <p class="font-semibold text-lg text-muted-color mb-1">Esterilizado</p>
+                            <Tag :severity="mascota.Esterilizado ? 'success' : 'info'"
+                                :value="mascota.Esterilizado ? 'SÍ' : 'NO'" />
+                        </div> -->
                     </div>
                 </template>
             </Card>
@@ -226,12 +203,6 @@ onMounted(async () => {
                         <div class="flex align-items-center gap-2">
                             <i class="pi pi-user" style="font-size: 1.2rem"></i>
                             <span class="font-bold white-space-nowrap">Información del Dueño</span>
-                        </div>
-                    </Tab>
-                    <Tab value="2">
-                        <div class="flex align-items-center gap-2">
-                            <i class="pi pi-book" style="font-size: 1.2rem"></i>
-                            <span class="font-bold white-space-nowrap">Historial Médico</span>
                         </div>
                     </Tab>
                 </TabList>
@@ -310,31 +281,12 @@ onMounted(async () => {
                             </Fluid>
                         </div>
                     </TabPanel>
-                    <TabPanel value="2">
-                        <div class="p-4">
-                            <Timeline :value="historialMedico" align="alternate" class="customized-timeline">
-                                <template #marker="slotProps">
-                                    <span class="custom-marker" :style="{ backgroundColor: slotProps.item.color }">
-                                        <i :class="slotProps.item.icon"></i>
-                                    </span>
-                                </template>
-                                <template #content="slotProps">
-                                    <Card>
-                                        <template #title>{{ slotProps.item.titulo }}</template>
-                                        <template #subtitle> {{ slotProps.item.fecha }} - {{ slotProps.item.doctor }}
-                                        </template>
-                                        <template #content>
-                                            <p>{{ slotProps.item.descripcion }}</p>
-                                        </template>
-                                    </Card>
-                                </template>
-                            </Timeline>
-                        </div>
-                    </TabPanel>
                 </TabPanels>
             </Tabs>
         </div>
         <div class="col-12 flex justify-end gap-2 mt-4" v-if="activeTab === '0' || activeTab === '1'">
+            <Button label="Volver al Inicio" icon="pi pi-arrow-left" severity="secondary"
+                @click="router.push({ name: 'mi-veterinaria' })" />
             <template v-if="editando">
                 <Button label="Cancelar" severity="secondary" icon="pi pi-times" @click="finalizarEdicion" />
                 <Button label="Guardar Cambios" icon="pi pi-check" @click="guardarCambios" />

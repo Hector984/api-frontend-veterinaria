@@ -22,7 +22,7 @@ const registrarMascota = async () => {
     if (formularioMascotaValido.value) {
         try {
             const respuesta = await mascotaStore.registrarMascota();
-            if (respuesta && respuesta.status == 200) {
+            if (respuesta && respuesta.status == 201) {
                 notificacionesStore.mostrarExito('Éxito', 'Mascota registrada.');
                 mascotaStore.limpiarDatosMascota();
                 cerrarFormulario();

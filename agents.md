@@ -66,55 +66,48 @@ Define la estructura visual de la aplicación.
 #### `src/modules/`
 Aquí reside la lógica de negocio principal, organizada en módulos cohesivos por dominio. Esta es la base de la arquitectura por componentes. Cada módulo encapsula sus propias vistas, componentes, servicios (API calls) y stores (manejo de estado).
 
-- **`admin/`**: Panel de administración.
-- **`citas/`**: Gestión de citas.
-- **`clientes/`**: Gestión de clientes.
-- **`mascotas/`**: Gestión de mascotas.
-- **`notificaciones/`**: Sistema de notificaciones.
-- **`veterinaria/`**: Lógica de la veterinaria (información, dashboard específico).
-
-Un módulo típico como `clientes/` tendría:
-- **`components/`**: Componentes de Vue específicos para clientes.
-- **`services/`**: Lógica para interactuar con la API de clientes.
-- **`stores/`**: Estado global relacionado con los clientes (usando Pinia).
-- **`views/`**: Vistas o páginas completas del módulo de clientes.
+- **`admin/`**: Panel de administración para la gestión de veterinarias.
+- **`catalogos/`**: Módulos de catálogos generales para la configuración de la veterinaria.
+    - **`servicios-extra/`**: CRUD para gestionar tipos de servicios (baños, estética, etc.).
+- **`clientes/`**: Gestión de propietarios y sus datos de contacto.
+- **`mascotas/`**: Gestión de pacientes. Incluye el registro de servicios adicionales realizados a la mascota.
+- **`consultas/`**: Registro de la atención médica, diagnósticos y tratamientos.
+- **`historial-clinico/`**: Línea de tiempo que centraliza consultas y servicios realizados.
+- **`notificaciones/`**: Sistema de alertas y avisos.
+- **`veterinaria/`**: Información del establecimiento y dashboards específicos.
+- **`receta/`**: Configuración y generación de recetas médicas en PDF.
 
 #### `src/router/`
 Contiene la configuración de las rutas de la aplicación utilizando Vue Router. Mapea las URLs a las vistas correspondientes.
 
 #### `src/service/`
-Servicios globales o genéricos que pueden ser utilizados por cualquier componente o módulo, como un servicio de autenticación o de obtención de datos generales.
+Servicios globales o genéricos que pueden ser utilizados por cualquier componente o módulo, como un servicio de autenticación o de obtención de datos generales (CountryService, etc.).
 
 #### `src/stores/`
 Almacenes de estado globales (usando Pinia) que no pertenecen a un módulo específico, como el estado de carga (`useLoadingStore.js`).
 
 #### `src/views/`
-Contiene las vistas principales o páginas de la aplicación que no forman parte de un módulo de negocio específico, como el `Dashboard.vue` general, `Landing.vue` y las páginas de autenticación. Se excluye el directorio `uikit` que contiene componentes de demostración.
+Contiene las vistas principales o páginas de la aplicación que no forman parte de un módulo de negocio específico, como el `Dashboard.vue` general y las páginas de autenticación.
 
 #### 📌 Decisión Técnica: Manejo de Moneda y Costos
 
 Contexto
-Para el modulo de Consultas, se requiere almacenar el costo de los servicios médicos. Se ha optado por un enfoque de integridad financiera sobre la representación visual directa en la base de datos.
+Para el registro de **Consultas** y **Servicios Extras**, se requiere almacenar costos. Se ha optado por un enfoque de integridad financiera sobre la representación visual directa en la base de datos.
 
 Implementación Final
 Base de Datos (Postgres): El campo Costo se almacena como un tipo integer.
 
-Lógica de Almacenamiento: Se utiliza la unidad mínima de la moneda (centavos).
+Lógica de Almacenamiento: Se utiliza la unidad mínima de la moneda (**centavos**).
 
 Ejemplo: Un costo de $10.50 se almacena como 1050.
 
-Entidad C# (Consulta.cs): Mantiene la propiedad como int para asegurar que todas las operaciones en la capa de datos sean atómicas y libres de errores de redondeo de punto flotante.
+Entidad C# (Back-End): Mantiene la propiedad como int para asegurar que todas las operaciones en la capa de datos sean atómicas y libres de errores de redondeo de punto flotante.
 
-Capa de Presentación (DTOs): La conversión a moneda real (decimal) se realiza exclusivamente en los DTOs o mediante el mapeo de AutoMapper.
+Capa de Presentación (Frontend): La conversión se realiza exclusivamente al enviar o recibir datos.
+- **Al enviar (Write)**: Se multiplica el valor decimal por 100 y se redondea (`Math.round(costo * 100)`).
+- **Al mostrar (Read)**: Se divide el entero entre 100 (`costoEntero / 100`).
 
 Justificación (Rationale)
-Precisión Absoluta: El uso de integer elimina los errores de redondeo comunes en los tipos float o double y es más eficiente que numeric para cálculos masivos.
+Precisión Absoluta: El uso de integer elimina los errores de redondeo comunes en los tipos float o double.
 
-Simplicidad de Arquitectura: Dado que el campo tiene un uso limitado (reportes de ganancias), se decidió no implementar Value Converters en el DbContext para mantener la transparencia total entre la clase C# y la tabla de Postgres.
-
-Rendimiento: Las sumatorias para reportes mensuales de ganancias se realizan directamente sobre enteros en el servidor de base de datos.
-
-Reglas de Mapeo
-Hacia el Cliente (Read): decimal Moneda = costoEntero / 100m;
-
-Hacia la Base de Datos (Write): int costoEntero = (int)Math.Round(decimalMoneda * 100, MidpointRounding.AwayFromZero);
+Rendimiento: Las sumatorias para reportes de ganancias se realizan directamente sobre enteros en el servidor de base de datos, lo cual es más eficiente.

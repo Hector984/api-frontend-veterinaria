@@ -55,7 +55,6 @@ export const useConsultaStore = defineStore('consulta', () => {
             return blob;
         } catch (err) {
             error.value = 'Error al generar la receta médica';
-            console.error('Error generating prescription:', err);
             throw err;
         } finally {
             loadingStore.setLoading(false);

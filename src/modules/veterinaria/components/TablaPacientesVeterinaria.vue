@@ -42,16 +42,22 @@ const nuevaConsulta = (mascota) => {
     router.push({ name: 'nueva-consulta', params: { id: mascota.id } });
 };
 
+const verHistorialClinico = (mascota) => {
+    router.push({ name: 'historial-clinico', params: { id: mascota.id } });
+};
+
 onBeforeMount(() => {
     initFilters();
 });
 </script>
 
 <template>
-    <DataTable :value="props.mascotas" :paginator="true" :rows="10" dataKey="id" :rowHover="true" v-model:filters="filtros" filterDisplay="menu" showGridlines>
+    <DataTable :value="props.mascotas" :paginator="true" :rows="10" dataKey="id" :rowHover="true"
+        v-model:filters="filtros" filterDisplay="menu" showGridlines>
         <template #header>
             <div class="flex justify-start">
-                <Button type="button" icon="pi pi-filter-slash" label="Limpiar Filtros" outlined @click="clearFilter()" />
+                <Button type="button" icon="pi pi-filter-slash" label="Limpiar Filtros" outlined
+                    @click="clearFilter()" />
             </div>
         </template>
 
@@ -99,20 +105,27 @@ onBeforeMount(() => {
                 <Tag :severity="data.activo ? 'success' : 'danger'" :value="data.activo ? 'Activo' : 'Inactivo'" />
             </template>
             <template #filter="{ filterModel, filterCallback }">
-                <Dropdown v-model="filterModel.value" @change="filterCallback()" :options="statuses" optionLabel="label" optionValue="value" placeholder="Cualquiera">
+                <Dropdown v-model="filterModel.value" @change="filterCallback()" :options="statuses" optionLabel="label"
+                    optionValue="value" placeholder="Cualquiera">
                     <template #option="slotProps">
-                        <Tag :severity="slotProps.option.value ? 'success' : 'danger'" :value="slotProps.option.label" />
+                        <Tag :severity="slotProps.option.value ? 'success' : 'danger'"
+                            :value="slotProps.option.label" />
                     </template>
                 </Dropdown>
             </template>
         </Column>
 
-        <Column header="Acciones" bodyClass="text-center" style="min-width: 8rem">
+        <Column header="Acciones" bodyClass="text-center" style="min-width: 10rem">
             <template #body="slotProps">
                 <div class="flex gap-2 justify-center" v-if="slotProps.data.activo">
-                    <Button icon="pi pi-plus" severity="primary" rounded @click="nuevaConsulta(slotProps.data)" />
-                    <Button icon="pi pi-pencil" severity="secondary" rounded @click="editarMascota(slotProps.data)" />
-                    <Button icon="pi pi-trash" severity="danger" rounded @click="confirmarEliminar(slotProps.data)" />
+                    <Button icon="pi pi-plus" severity="primary" text rounded @click="nuevaConsulta(slotProps.data)"
+                        v-tooltip.top="'Nueva Consulta'" />
+                    <Button icon="pi pi-history" severity="info" text rounded
+                        @click="verHistorialClinico(slotProps.data)" v-tooltip.top="'Historial Clínico'" />
+                    <Button icon="pi pi-pencil" severity="primary" text rounded @click="editarMascota(slotProps.data)"
+                        v-tooltip.top="'Editar Información Mascota/Dueño'" />
+                    <Button icon="pi pi-trash" severity="danger" text rounded @click="confirmarEliminar(slotProps.data)"
+                        v-tooltip.top="'Eliminar'" />
                 </div>
             </template>
         </Column>

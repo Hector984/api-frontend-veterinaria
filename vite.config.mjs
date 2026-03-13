@@ -17,7 +17,15 @@ export default defineConfig({
             'primevue/inputtext',
             'primevue/timeline',
             'primevue/avatar',    // Añadido (lo usas en tu código)
-            'primevue/button'     // Añadido
+            'primevue/button',     // Añadido
+            'primevue/iconfield',
+            'primevue/inputicon',
+            'primevue/tag',
+            'primevue/selectbutton',
+            'primevue/toggleswitch',
+            'primevue/confirmdialog',
+            'primevue/colorpicker',
+            'primevue/multiselect'
         ]
     },
     plugins: [

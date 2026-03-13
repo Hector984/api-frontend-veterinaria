@@ -4,7 +4,7 @@ import { useMascotaStore } from '@/modules/mascotas/stores/useMascotaStore';
 import { useNotificacionesStore } from '@/modules/notificaciones/store/useNotificaciones';
 import { useVeterinariaStore } from '@/modules/veterinaria/stores/useVeterinariaStore';
 import { storeToRefs } from 'pinia';
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 
 const emits = defineEmits(['formulario-mascota-valido']);
 
@@ -19,18 +19,67 @@ const storeVeterinaria = useVeterinariaStore();
 
 const notificacionesStore = useNotificacionesStore();
 
-const erroresFormulario = reactive({
-    nombre: '',
-    especie: '',
-    sexo: '',
-    edad: '',
-    peso: '',
-    fechaNacimiento: '',
-    observaciones: '',
-    clienteId: ''
+const erroresFormulario = ref({
+    nombre: false,
+    especie: false,
+    sexo: false,
+    edad: false,
+    peso: false,
+    fechaNacimiento: false,
+    fechaProximaCita: false,
+    observaciones: false,
+    clienteId: false
 });
 
 const sexoOptions = ref(['Macho', 'Hembra']);
+
+const limits = {
+    nombre: 20,
+    edad: 100,
+    peso: 100,
+    observaciones: 1000
+};
+
+var campoTocado = (campo) => {
+    validarCamposFormulario(campo);
+};
+
+const validarTiempoReal = (campo) => {
+    if (erroresFormulario[campo]) {
+        validarCamposFormulario(campo);
+    }
+};
+
+const validarCamposFormulario = (campo) => {
+    switch (campo) {
+        case 'nombre':
+            erroresFormulario.value.nombre = !datosMascota.value.Nombre || datosMascota.value.Nombre.length > limits.nombre;
+            break;
+        case 'especie':
+            erroresFormulario.value.especie = !datosMascota.value.Especie;
+            break;
+        case 'sexo':
+            erroresFormulario.value.sexo = !datosMascota.value.Sexo || String(datosMascota.value.Sexo).trim() === '';
+            break;
+        case 'edad':
+            erroresFormulario.value.edad = !datosMascota.value.Edad || Number(datosMascota.value.Edad) > limits.edad;
+            break;
+        case 'peso':
+            erroresFormulario.value.peso = !datosMascota.value.Peso && Number(datosMascota.value.Peso) > limits.peso;
+            break;
+        case 'fechaNacimiento':
+            erroresFormulario.value.fechaNacimiento = !datosMascota.value.FechaNacimiento;
+            break;
+        case 'observaciones':
+            erroresFormulario.value.observaciones = datosMascota.value.Obervaciones && datosMascota.value.Obervaciones.length > limits.observaciones;
+            break;
+        case 'clienteId':
+            erroresFormulario.value.costo = !datosMascota.value.ClienteId;
+            break;
+        default:
+            break;
+    }
+};
 
 const validarFormulario = (event) => {
     const campoId = event.target?.id || event.originalEvent?.target?.id;
@@ -62,7 +111,8 @@ const validarFormulario = (event) => {
         case 'Edad':
         case 'Peso':
             // Asegurarse de que sea un número y mayor a 0
-            if (typeof datosMascota.value[nombrePropiedadMascota] !== 'number' || datosMascota.value[nombrePropiedadMascota] <= 0) {
+            var pesoNumerico = Number(datosMascota.value[nombrePropiedadMascota]);
+            if (typeof pesoNumerico !== 'number' || pesoNumerico <= 0) {
                 erroresFormulario[campoId] = `El campo ${campoId} debe ser mayor a cero.`;
                 errorEncontrado = true;
             }
@@ -139,12 +189,18 @@ const obtenerClientesPorVeterinariaId = async () => {
     }
 };
 
-const mascotaValida = computed(() => {
-    const sinErrores = Object.values(erroresFormulario).every((error) => error === '');
+const formularioValido = computed(() => {
+    const camposRequeridosLlenos = datosMascota.value.Nombre && datosMascota.value.Especie && datosMascota.value.Sexo && datosMascota.value.Edad && datosMascota.value.Peso && datosMascota.value.FechaNacimiento && datosMascota.value.ClienteId;
+    const formularioSinErrores =
+        !erroresFormulario.value.nombre &&
+        !erroresFormulario.value.sexo &&
+        !erroresFormulario.value.edad &&
+        !erroresFormulario.value.obervaciones &&
+        !erroresFormulario.value.especie &&
+        !erroresFormulario.value.peso &&
+        !erroresFormulario.value.fechaNacimiento;
 
-    const camposLlenos = datosMascota.value.Nombre && datosMascota.value.Especie && datosMascota.value.Sexo && datosMascota.value.Edad && datosMascota.value.Peso && datosMascota.value.fechaNacimiento && datosMascota.value.ClienteId;
-
-    return camposLlenos && sinErrores;
+    return camposRequeridosLlenos && formularioSinErrores;
 });
 
 // 1. Si cambia la fecha de nacimiento -> calculamos edad
@@ -191,7 +247,7 @@ watch(
 );
 
 watch(
-    mascotaValida,
+    formularioValido,
     (newVal) => {
         emits('formulario-mascota-valido', newVal);
     },
@@ -209,8 +265,10 @@ onMounted(async () => {
                 <div class="flex flex-col gap-2">
                     <label for="nombre" class="font-semibold">Nombre *</label>
                     <InputText v-model.trim="datosMascota.Nombre" id="nombre" placeholder="Capitan"
-                        @blur="validarFormulario" :class="{ 'p-invalid': erroresFormulario.nombre }" />
-                    <small class="text-red-400" v-if="erroresFormulario.nombre">{{ erroresFormulario.nombre }}</small>
+                        @blur="campoTocado('nombre')" @input="validarTiempoReal('nombre')"
+                        :class="{ 'p-invalid': erroresFormulario.nombre }" />
+                    <small class="text-red-500" v-if="erroresFormulario.nombre">El nombre es obligatorio y no debe
+                        exceder los 20 caracteres.</small>
                 </div>
                 <div class="flex flex-col gap-2">
                     <label for="sexo" class="font-semibold">Sexo *</label>

@@ -30,6 +30,11 @@ const router = createRouter({
                     component: () => import('@/modules/mascotas/views/Mascota.vue')
                 },
                 {
+                    path: '/mascotas/:id/historial-clinico',
+                    name: 'historial-clinico',
+                    component: () => import('@/modules/historial-clinico/views/HistorialClinico.vue')
+                },
+                {
                     path: '/mascotas/:id/nueva-consulta',
                     name: 'nueva-consulta',
                     component: () => import('@/modules/consultas/views/RegistrarConsulta.vue')
@@ -38,6 +43,11 @@ const router = createRouter({
                     path: '/configuracion/receta',
                     name: 'configurar-receta',
                     component: () => import('@/modules/receta/views/Receta.vue')
+                },
+                {
+                    path: '/servicios-extra/:id?',
+                    name: 'servicios-extra',
+                    component: () => import('@/modules/catalogos/servicios-extra/views/ServiciosExtra.vue')
                 }
             ]
         },

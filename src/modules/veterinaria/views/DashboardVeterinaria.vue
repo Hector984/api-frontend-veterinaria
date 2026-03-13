@@ -28,11 +28,10 @@ onMounted(async () => {
 
 <template>
     <Fluid>
-        <div class="grid grid-cols-12 gap-8 mb-5">
-            <VeterinariaInfoCard v-if="veterinariaStore.datosVeterinaria"
-                :datosVeterinaria="veterinariaStore.datosVeterinaria"
-                @abrir-formulario-mascota="abrirFormularioMascota" />
-        </div>
+        
+        <VeterinariaInfoCard v-if="veterinariaStore.datosVeterinaria"
+            :datosVeterinaria="veterinariaStore.datosVeterinaria"
+            @abrir-formulario-mascota="abrirFormularioMascota" />
 
         <FormularioRegistrarVeterinaria v-if="veterinariaStore.mostarFormularioRegistroVeterinaria"
             :showRegisterVeterinaryForm="veterinariaStore.mostarFormularioRegistroVeterinaria" />

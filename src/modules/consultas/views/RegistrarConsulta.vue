@@ -12,7 +12,6 @@ const toast = useToast();
 
 const mascotaStore = useMascotaStore();
 const consultaStore = useConsultaStore();
-const loadingStore = useLoadingStore();
 
 const formErrors = ref({
     motivo: false,
@@ -190,31 +189,37 @@ onMounted(async () => {
         <div class="col-12">
             <Card v-if="mascotaStore.datosMascota.id">
                 <template #title>
-                    <div class="flex items-center gap-4">
-                        <div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <Button icon="pi pi-arrow-left" severity="secondary" text rounded @click="router.back()" />
                             <h2 class="font-bold text-3xl mb-0">Nueva Consulta: {{ mascotaStore.datosMascota.Nombre }}
                             </h2>
                         </div>
                     </div>
                 </template>
                 <template #content>
-                    <div class="flex justify-around">
+                    <div class="flex justify-around items-center">
                         <div class="text-center">
-                            <p class="font-semibold text-lg">Especie</p>
-                            <p>{{ mascotaStore.datosMascota.Especie }}</p>
+                            <p class="font-semibold text-lg text-muted-color mb-1">Especie / Raza</p>
+                            <p class="text-xl font-bold">{{ mascotaStore.datosMascota.Especie }} / {{ 'Mestizo' }}</p>
                         </div>
                         <div class="text-center">
-                            <p class="font-semibold text-lg">Sexo</p>
-                            <p>{{ mascotaStore.datosMascota.Sexo }}</p>
+                            <p class="font-semibold text-lg text-muted-color mb-1">Sexo</p>
+                            <p class="text-xl font-bold">{{ mascotaStore.datosMascota.Sexo }}</p>
                         </div>
                         <div class="text-center">
-                            <p class="font-semibold text-lg">Edad</p>
-                            <p>{{ mascotaStore.datosMascota.Edad }} años</p>
+                            <p class="font-semibold text-lg text-muted-color mb-1">Edad</p>
+                            <p class="text-xl font-bold">{{ mascotaStore.datosMascota.Edad }} años</p>
                         </div>
                         <div class="text-center">
-                            <p class="font-semibold text-lg">Peso</p>
-                            <p>{{ mascotaStore.datosMascota.Peso }} Kg</p>
+                            <p class="font-semibold text-lg text-muted-color mb-1">Peso Actual</p>
+                            <p class="text-xl font-bold">{{ mascotaStore.datosMascota.Peso }} Kg</p>
                         </div>
+                        <!-- <div class="text-center">
+                            <p class="font-semibold text-lg text-muted-color mb-1">Esterilizado</p>
+                            <Tag :severity="mascota.Esterilizado ? 'success' : 'info'"
+                                :value="mascota.Esterilizado ? 'SÍ' : 'NO'" />
+                        </div> -->
                     </div>
                 </template>
             </Card>
@@ -348,6 +353,12 @@ onMounted(async () => {
                     </div>
                 </template>
             </Card>
+        </div>
+
+        <!-- Botón de retorno -->
+        <div class="col-12 mt-5 flex justify-end">
+            <Button label="Volver al Inicio" icon="pi pi-arrow-left" severity="secondary"
+                @click="router.push({ name: 'mi-veterinaria' })" />
         </div>
     </div>
 </template>

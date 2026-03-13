@@ -1,7 +1,7 @@
 <script setup>
 import { useClienteStore } from '@/modules/clientes/stores/useClienteStore';
 import { storeToRefs } from 'pinia';
-import { computed, reactive, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const clienteStore = useClienteStore();
 const { datosCliente } = storeToRefs(clienteStore);
@@ -9,40 +9,62 @@ const { datosCliente } = storeToRefs(clienteStore);
 const emits = defineEmits(['cliente-valido']);
 
 // 2. Objeto para gestionar los mensajes de error
-const erroresCliente = reactive({
-    Nombre: '',
-    ApellidoPaterno: '',
-    Email: '',
-    Telefono: ''
+const erroresFormulario = ref({
+    nombre: false,
+    apellidoPaterno: false,
+    apellidoMaterno: false,
+    email: false,
+    telefono: false
 });
 
-// 3. Función de validación (Se ejecuta al perder el foco 'blur')
-const validarCliente = () => {
-    // Nombre
-    erroresCliente.Nombre = datosCliente.value.Nombre.length < 4 ? 'El nombre es obligatorio y debe ser válido.' : '';
+const limits = {
+    nombre: 20,
+    apellidoPaterno: 20,
+    apellidoMaterno: 20,
+    email: 50,
+    telefono: 10
+};
 
-    // Apellido Paterno
-    erroresCliente.ApellidoPaterno = datosCliente.value.ApellidoPaterno.length < 4 ? 'El apellido paterno es obligatorio.' : '';
+var campoTocado = (campo) => {
+    validarCamposFormulario(campo);
+};
 
-    erroresCliente.ApellidoMaterno = datosCliente.value.ApellidoMaterno.length < 4 ? 'El apellido materno es obligatorio.' : '';
+const validarTiempoReal = (campo) => {
+    if (erroresFormulario[campo]) {
+        validarCamposFormulario(campo);
+    }
+};
 
-    // Email (Validación básica con Regex)
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    erroresCliente.Email = !emailRegex.test(datosCliente.value.Email) ? 'Ingresa un correo electrónico válido.' : '';
-
-    // Teléfono (Validación simple de longitud)
-    erroresCliente.Telefono = datosCliente.value.Telefono.length < 7 ? 'El teléfono debe tener al menos 7 dígitos.' : '';
+const validarCamposFormulario = (campo) => {
+    switch (campo) {
+        case 'nombre':
+            erroresFormulario.value.nombre = !datosCliente.value.Nombre || datosCliente.value.Nombre.length < 4 || datosCliente.value.Nombre.length > limits.nombre;
+            break;
+        case 'apellidoPaterno':
+            erroresFormulario.value.apellidoPaterno = !datosCliente.value.ApellidoPaterno || datosCliente.value.ApellidoPaterno.length < 4 || datosCliente.value.ApellidoPaterno.length > limits.apellidoPaterno;
+            break;
+        case 'apellidoMaterno':
+            erroresFormulario.value.apellidoMaterno = !datosCliente.value.ApellidoMaterno || datosCliente.value.ApellidoMaterno.length < 4 || datosCliente.value.ApellidoMaterno.length > limits.apellidoMaterno;
+            break;
+        case 'email':
+            var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            erroresFormulario.value.email = !datosCliente.value.Email || !emailRegex.test(datosCliente.value.Email);
+            break;
+        case 'telefono':
+            erroresFormulario.value.telefono = !datosCliente.value.Telefono || datosCliente.value.Telefono.length != limits.telefono;
+            break;
+        default:
+            break;
+    }
 };
 
 // 4. Propiedad computada para habilitar/deshabilitar el botón "Siguiente"
 const clienteValido = computed(() => {
     // Verificamos que no haya errores
-    const sinErrores = Object.values(erroresCliente).every((error) => error === '');
+    const camposRequeridosLlenos = datosCliente.value.Nombre && datosCliente.value.ApellidoPaterno && datosCliente.value.Email && datosCliente.value.Telefono;
+    const formularioSinErrores = !erroresFormulario.value.nombre && !erroresFormulario.value.apellidoPaterno && !erroresFormulario.value.apellidoMaterno && !erroresFormulario.value.email && !erroresFormulario.value.telefono;
 
-    // Verificamos que los campos obligatorios no estén vacíos
-    const camposLlenos = datosCliente.value.Nombre && datosCliente.value.ApellidoPaterno && datosCliente.value.Email && datosCliente.value.Telefono;
-
-    return camposLlenos && sinErrores;
+    return camposRequeridosLlenos && formularioSinErrores;
 });
 
 watch(
@@ -60,20 +82,26 @@ watch(
                 <div class="flex flex-col gap-2">
                     <label for="nombre" class="font-semibold">Nombre *</label>
                     <InputText v-model.trim="datosCliente.Nombre" id="nombre" placeholder="Ej. Juan"
-                        @blur="validarCliente" :class="{ 'p-invalid': erroresCliente.Nombre }" />
-                    <small class="text-red-400" v-if="erroresCliente.Nombre">{{ erroresCliente.Nombre }}</small>
+                        @blur="campoTocado('nombre')" @input="validarTiempoReal('nombre')"
+                        :class="{ 'p-invalid': erroresFormulario.nombre }" />
+                    <small class="text-red-400" v-if="erroresFormulario.nombre">El campo es obligatorio y debe tener una
+                        longitud máxima de 20 caracteres</small>
                 </div>
                 <div class="flex flex-col gap-2">
                     <label for="apellidoPaterno" class="font-semibold">Apellido Paterno *</label>
                     <InputText v-model.trim="datosCliente.ApellidoPaterno" id="apellidoPaterno" placeholder="Ej. Pérez"
-                        @blur="validarCliente" :class="{ 'p-invalid': erroresCliente.ApellidoPaterno }" />
-                    <small class="text-red-400" v-if="erroresCliente.ApellidoPaterno">{{ erroresCliente.ApellidoPaterno
-                        }}</small>
+                        @blur="campoTocado('apellidoPaterno')" @input="validarTiempoReal('apellidoPaterno')"
+                        :class="{ 'p-invalid': erroresFormulario.apellidoPaterno }" />
+                    <small class="text-red-400" v-if="erroresFormulario.apellidoPaterno">El campo es obligatorio y debe
+                        tener una longitud máxima de 20 caracteres</small>
                 </div>
                 <div class="flex flex-col gap-2">
                     <label for="apellidoMaterno" class="font-semibold">Apellido Materno *</label>
                     <InputText v-model.trim="datosCliente.ApellidoMaterno" id="apellidoMaterno" placeholder="Ej. García"
-                        @blur="validarCliente" :class="{ 'p-invalid': erroresCliente.apellidoMaterno }" />
+                        @blur="campoTocado('apellidoMaterno')" @input="validarTiempoReal('apellidoMaterno')"
+                        :class="{ 'p-invalid': erroresFormulario.apellidoMaterno }" />
+                    <small class="text-red-400" v-if="erroresFormulario.apellidoMaterno">El campo es obligatorio y debe
+                        tener una longitud máxima de 20 caracteres</small>
                 </div>
             </div>
 
@@ -81,14 +109,18 @@ watch(
                 <div class="flex flex-col gap-2">
                     <label for="email" class="font-semibold">Email *</label>
                     <InputText v-model.trim="datosCliente.Email" id="email" type="email" placeholder="juan@correo.com"
-                        @blur="validarCliente" :class="{ 'p-invalid': erroresCliente.Email }" />
-                    <small class="text-red-400" v-if="erroresCliente.Email">{{ erroresCliente.Email }}</small>
+                        @blur="campoTocado('email')" @input="validarTiempoReal('email')"
+                        :class="{ 'p-invalid': erroresFormulario.email }" />
+                    <small class="text-red-400" v-if="erroresFormulario.email">El correo debe tenr un formato
+                        válido.</small>
                 </div>
                 <div class="flex flex-col gap-2">
                     <label for="telefono" class="font-semibold">Teléfono *</label>
                     <InputText v-model.trim="datosCliente.Telefono" id="telefono" placeholder="5512345678"
-                        @blur="validarCliente" :class="{ 'p-invalid': erroresCliente.Telefono }" />
-                    <small class="text-red-400" v-if="erroresCliente.Telefono">{{ erroresCliente.Telefono }}</small>
+                        @blur="campoTocado('telefono')" @input="validarTiempoReal('telefono')"
+                        :class="{ 'p-invalid': erroresFormulario.telefono }" />
+                    <small class="text-red-400" v-if="erroresFormulario.telefono">El teléfono debe tener 10
+                        digítos.</small>
                 </div>
             </div>
         </div>

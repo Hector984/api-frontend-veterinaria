@@ -14,7 +14,10 @@ const model = ref([
     },
     {
         label: 'Configuración',
-        items: [{ label: 'Receta', icon: 'pi pi-fw pi-home', to: '/configuracion/receta' }]
+        items: [
+            { label: 'Receta', icon: 'pi pi-fw pi-cog', to: '/configuracion/receta' },
+            { label: 'Servicios Extras', icon: 'pi pi-fw pi-briefcase', to: '/servicios-extra' }
+        ]
     },
     {
         label: 'Cuenta',
